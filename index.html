@@ -8,123 +8,163 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg: #0b0f19;
-            --glass: rgba(255, 255, 255, 0.06);
-            --border: rgba(255, 255, 255, 0.1);
-            --text: #ffffff;
-            --text-muted: #8b949e;
-            --accent: #6366f1;
-            --success: #10b981;
+            --bg: #09090b; /* Дуже глибокий чорний */
+            --surface: #18181b; /* Колір карток */
+            --border: rgba(255, 255, 255, 0.08);
+            --text: #fafafa;
+            --text-muted: #a1a1aa;
+            --accent: #ffffff; /* Мінімалістичний білий акцент */
+            --success: #ffffff;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
 
         body { 
             background: var(--bg); color: var(--text); 
-            padding: 20px; padding-bottom: 100px;
+            padding: 24px 20px 100px 20px;
             min-height: 100vh;
         }
 
+        /* SVG Іконки */
+        svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
         /* Хедер */
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .logo { font-size: 28px; font-weight: 800; letter-spacing: -1px; background: linear-gradient(135deg, #fff, #a5b4fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .logo { font-size: 26px; font-weight: 800; letter-spacing: -1px; color: var(--text); }
         
-        .layout-btn { background: var(--glass); border: 1px solid var(--border); color: white; width: 40px; height: 40px; border-radius: 12px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .icon-btn { 
+            background: var(--surface); border: 1px solid var(--border); color: var(--text); 
+            width: 44px; height: 44px; border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
+        }
+        .icon-btn:active { transform: scale(0.95); }
 
         /* Категорії */
-        .categories { display: flex; gap: 10px; margin-bottom: 25px; overflow-x: auto; scrollbar-width: none; }
+        .categories { display: flex; gap: 12px; margin-bottom: 30px; overflow-x: auto; scrollbar-width: none; }
         .categories::-webkit-scrollbar { display: none; }
         .cat-btn { 
-            background: var(--glass); border: 1px solid var(--border);
-            padding: 10px 20px; border-radius: 16px; color: var(--text-muted); 
-            font-size: 14px; font-weight: 600; transition: 0.2s; cursor: pointer; white-space: nowrap;
+            background: transparent; border: 1px solid var(--border);
+            padding: 10px 22px; border-radius: 30px; color: var(--text-muted); 
+            font-size: 14px; font-weight: 500; transition: 0.2s; cursor: pointer; white-space: nowrap;
         }
-        .cat-btn.active { background: white; color: black; border-color: white; }
+        .cat-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); font-weight: 600; }
 
         /* Сітка */
-        .grid { display: grid; gap: 15px; }
+        .grid { display: grid; gap: 16px; }
         .grid.cols-1 { grid-template-columns: 1fr; }
         .grid.cols-2 { grid-template-columns: 1fr 1fr; }
         
         .card {
-            background: var(--glass); border: 1px solid var(--border);
+            background: var(--surface); border: 1px solid var(--border);
             border-radius: 20px; overflow: hidden; position: relative;
-            cursor: pointer;
+            cursor: pointer; transition: transform 0.2s;
         }
-        .grid.cols-1 .card { height: 250px; }
-        .grid.cols-2 .card { height: 200px; }
+        .card:active { transform: scale(0.98); }
+        
+        .grid.cols-1 .card { height: 260px; }
+        .grid.cols-2 .card { height: 220px; }
         
         .card img { width: 100%; height: 100%; object-fit: cover; }
         .card::after {
             content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 70%;
-            background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
         }
-        .card-info { position: absolute; bottom: 0; left: 0; padding: 15px; width: 100%; z-index: 2; }
-        .card-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #a5b4fc; margin-bottom: 5px; display: block; }
-        .card-title { font-size: 18px; font-weight: 700; line-height: 1.2; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .card-info { position: absolute; bottom: 0; left: 0; padding: 16px; width: 100%; z-index: 2; }
+        .card-tag { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; display: block; letter-spacing: 0.5px; }
+        .card-title { font-size: 18px; font-weight: 700; line-height: 1.3; color: #fff; }
 
         /* ДЕТАЛЬНИЙ РЕЖИМ */
         #detailView {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg); z-index: 1000; overflow-y: auto;
         }
-        .detail-img-box { position: relative; height: 350px; }
+        .detail-img-box { position: relative; height: 380px; }
         .detail-img-box img { width: 100%; height: 100%; object-fit: cover; }
-        .detail-img-box::after { content:''; position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, transparent 40%, var(--bg) 100%); }
+        .detail-img-box::after { content:''; position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 40%, var(--bg) 100%); }
         
         .top-btns { position: absolute; top: 20px; width: 100%; padding: 0 20px; display: flex; justify-content: space-between; z-index: 10; }
-        .circle-btn { background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); color: white; border: 1px solid rgba(255,255,255,0.2); width: 45px; height: 45px; border-radius: 50%; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         
+        .circle-btn { 
+            background: rgba(0,0,0,0.4); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            color: white; border: 1px solid rgba(255,255,255,0.1); 
+            width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; 
+        }
+
         /* Приховане меню налаштувань */
         #actionMenu {
-            display: none; position: absolute; top: 75px; right: 20px; background: rgba(20,25,40,0.95); backdrop-filter: blur(15px); border: 1px solid var(--border); border-radius: 16px; padding: 10px; z-index: 20; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: none; position: absolute; top: 75px; right: 20px; background: var(--surface); 
+            border: 1px solid var(--border); border-radius: 16px; padding: 8px; z-index: 20; 
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8); min-width: 160px;
         }
-        .menu-btn { display: block; width: 100%; text-align: left; background: none; border: none; padding: 12px 20px; color: white; font-size: 15px; border-radius: 10px; cursor: pointer; }
-        .menu-btn.red { color: #ff5f57; }
+        .menu-btn { 
+            display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; 
+            background: none; border: none; padding: 14px 16px; color: var(--text); 
+            font-size: 15px; border-radius: 10px; cursor: pointer; font-weight: 500;
+        }
+        .menu-btn:active { background: rgba(255,255,255,0.05); }
+        .menu-btn.red { color: #ef4444; }
+        .menu-btn.red svg { stroke: #ef4444; }
         
-        .detail-content { padding: 25px; position: relative; z-index: 2; margin-top: -80px; }
-        .detail-title { font-size: 32px; font-weight: 800; margin-bottom: 30px; line-height: 1.1; }
+        .detail-content { padding: 0 24px 40px 24px; position: relative; z-index: 2; margin-top: -60px; }
+        .detail-title { font-size: 32px; font-weight: 700; margin-bottom: 30px; line-height: 1.15; }
 
-        .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin: 30px 0 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .section-title { font-size: 14px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
-        .reset-btn { background: var(--glass); border: 1px solid var(--border); color: white; padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 5px;}
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin: 40px 0 20px; }
+        .section-title { font-size: 15px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        
+        .text-btn { 
+            background: none; border: none; color: var(--text-muted); font-size: 13px; font-weight: 500; 
+            cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 8px 0;
+        }
 
         /* Інгредієнти (Чекбокси) */
-        .check-item { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; cursor: pointer; padding: 12px; background: var(--glass); border-radius: 16px; border: 1px solid transparent; transition: 0.2s; }
-        .check-item.done { opacity: 0.4; border-color: var(--border); }
+        .check-item { 
+            display: flex; align-items: flex-start; gap: 16px; margin-bottom: 12px; cursor: pointer; 
+            padding: 16px; background: var(--surface); border-radius: 16px; border: 1px solid var(--border); transition: 0.2s; 
+        }
+        .check-item.done { opacity: 0.4; background: transparent; }
         .check-item.done .check-text { text-decoration: line-through; }
         
-        .custom-checkbox { width: 24px; height: 24px; border: 2px solid var(--text-muted); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; }
-        .check-item.done .custom-checkbox { background: var(--success); border-color: var(--success); }
-        .check-item.done .custom-checkbox::after { content: '✓'; color: white; font-size: 14px; font-weight: bold; }
+        .custom-checkbox { 
+            width: 22px; height: 22px; border: 2px solid var(--text-muted); border-radius: 6px; 
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; 
+        }
+        .custom-checkbox svg { opacity: 0; width: 14px; height: 14px; stroke-width: 3; }
+        .check-item.done .custom-checkbox { background: var(--success); border-color: var(--success); color: var(--bg); }
+        .check-item.done .custom-checkbox svg { opacity: 1; }
         
-        .check-text { font-size: 16px; line-height: 1.4; padding-top: 2px; }
+        .check-text { font-size: 16px; line-height: 1.5; padding-top: 1px; }
 
         /* Процес (Просто текст) */
-        .plain-text-steps { font-size: 16px; line-height: 1.7; white-space: pre-line; color: rgba(255,255,255,0.9); }
+        .plain-text-steps { font-size: 16px; line-height: 1.8; white-space: pre-line; color: var(--text); opacity: 0.9; }
 
         /* Модалка додавання/редагування */
         #formModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11, 15, 25, 0.95); backdrop-filter: blur(15px); z-index: 2000;
-            padding: 20px; overflow-y: auto;
+            background: var(--bg); z-index: 2000; padding: 20px; overflow-y: auto;
         }
         .form-inner { max-width: 500px; margin: 20px auto; }
         input, textarea, select { 
-            width: 100%; padding: 18px; margin-bottom: 15px; 
-            background: var(--glass); border: 1px solid var(--border); 
-            border-radius: 18px; color: white; font-size: 16px; outline: none;
+            width: 100%; padding: 18px; margin-bottom: 16px; 
+            background: var(--surface); border: 1px solid var(--border); 
+            border-radius: 16px; color: var(--text); font-size: 16px; outline: none;
+            -webkit-appearance: none;
         }
-        .btn-save { background: white; color: black; padding: 20px; border-radius: 18px; width: 100%; font-weight: 800; border: none; margin-top: 10px; font-size: 16px; cursor: pointer; }
-
+        input:focus, textarea:focus, select:focus { border-color: var(--text-muted); }
+        
+        .btn-main { 
+            background: var(--text); color: var(--bg); padding: 20px; border-radius: 16px; 
+            width: 100%; font-weight: 700; border: none; font-size: 16px; cursor: pointer; 
+        }
+        
         .fab {
             position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: white; color: black; padding: 18px 35px; border-radius: 30px; border: none;
-            font-size: 16px; font-weight: 700; box-shadow: 0 10px 40px rgba(0,0,0,0.6); z-index: 100; cursor: pointer;
+            background: var(--text); color: var(--bg); padding: 16px 24px; border-radius: 30px; border: none;
+            font-size: 15px; font-weight: 600; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 100; 
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
         }
     </style>
 </head>
@@ -132,29 +172,44 @@
 
     <header>
         <div class="logo">RezApp</div>
-        <button class="layout-btn" onclick="toggleLayout()">▦</button>
+        <button class="icon-btn" onclick="toggleLayout()">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        </button>
     </header>
 
     <div class="categories">
         <button class="cat-btn active" onclick="filter('All')">Всі</button>
         <button class="cat-btn" onclick="filter('Загальне')">Загальне</button>
         <button class="cat-btn" onclick="filter('Сніданок')">Сніданок</button>
-        <button class="cat-btn" onclick="filter('Протеїн')">Протеїн 💪</button>
+        <button class="cat-btn" onclick="filter('Протеїн')">Протеїн</button>
     </div>
 
     <div class="grid cols-2" id="grid"></div>
 
-    <button class="fab" onclick="openForm()">+ Додати рецепт</button>
+    <button class="fab" onclick="openForm()">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Додати
+    </button>
 
     <div id="detailView">
         <div class="top-btns">
-            <button class="circle-btn" onclick="closeDetail()">✕</button>
-            <button class="circle-btn" onclick="toggleMenu()">⋮</button>
+            <button class="circle-btn" onclick="closeDetail()">
+                <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <button class="circle-btn" onclick="toggleMenu()">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+            </button>
         </div>
         
         <div id="actionMenu">
-            <button class="menu-btn" onclick="triggerEdit()">✎ Редагувати</button>
-            <button class="menu-btn red" onclick="triggerDelete()">✕ Видалити</button>
+            <button class="menu-btn" onclick="triggerEdit()">
+                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                Редагувати
+            </button>
+            <button class="menu-btn red" onclick="triggerDelete()">
+                <svg viewBox="0 0 24 24" width="16" height="16"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                Видалити
+            </button>
         </div>
 
         <div class="detail-img-box">
@@ -162,16 +217,19 @@
         </div>
         
         <div class="detail-content">
-            <div id="detTag" class="card-tag" style="margin-bottom: 10px;"></div>
+            <div id="detTag" class="card-tag"></div>
             <div id="detTitle" class="detail-title"></div>
             
             <div class="section-header">
                 <div class="section-title">Інгредієнти</div>
-                <button class="reset-btn" onclick="resetIngredients()">🔄 Скинути</button>
+                <button class="text-btn" onclick="resetIngredients()">
+                    <svg viewBox="0 0 24 24" width="14" height="14"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><polyline points="3 3 3 8 8 8"></polyline></svg>
+                    Очистити
+                </button>
             </div>
             <div id="detIng"></div>
             
-            <div class="section-header" style="margin-top: 40px;">
+            <div class="section-header">
                 <div class="section-title">Приготування</div>
             </div>
             <div id="detSteps" class="plain-text-steps"></div>
@@ -180,24 +238,28 @@
 
     <div id="formModal">
         <div class="form-inner">
-            <h2 id="formTitle" style="margin-bottom:25px;">Новий рецепт</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 30px;">
+                <h2 id="formTitle" style="font-size: 24px;">Новий рецепт</h2>
+                <button class="icon-btn" onclick="closeForm()" style="border:none; background:none;">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
             <select id="recipeCat">
                 <option value="Загальне">Загальне</option>
                 <option value="Сніданок">Сніданок</option>
-                <option value="Протеїн">Протеїн 💪</option>
+                <option value="Протеїн">Протеїн</option>
             </select>
             <input type="text" id="recipeTitle" placeholder="Назва страви">
             <input type="text" id="recipePhoto" placeholder="Посилання на фото (URL)">
             <textarea id="recipeIng" rows="5" placeholder="Інгредієнти (Кожен з нового рядка)"></textarea>
-            <textarea id="recipeSteps" rows="6" placeholder="Як готувати (Просто текст)"></textarea>
+            <textarea id="recipeSteps" rows="6" placeholder="Як готувати"></textarea>
             
-            <button class="btn-save" onclick="saveRecipe()">Зберегти</button>
-            <button onclick="closeForm()" style="background:none; border:none; color:var(--text-muted); width:100%; padding:20px; font-weight:600;">Скасувати</button>
+            <button class="btn-main" onclick="saveRecipe()">Зберегти</button>
         </div>
     </div>
 
     <script>
-        // Твій Config
         const firebaseConfig = {
           apiKey: "AIzaSyDKokz-gKpWZJV__yiYz2MzbybqZX1n-Ws",
           authDomain: "rezapp-42b6f.firebaseapp.com",
@@ -210,7 +272,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         
-        // ВШИТИЙ КЛЮЧ
         const SECRET_KEY = "myrezept7";
         
         let allRecipes = [];
@@ -225,8 +286,7 @@
 
         function applySavedLayout() {
             const cols = localStorage.getItem('rezapp_layout') || '2';
-            const grid = document.getElementById('grid');
-            grid.className = `grid cols-${cols}`;
+            document.getElementById('grid').className = `grid cols-${cols}`;
         }
 
         function toggleLayout() {
@@ -237,7 +297,6 @@
         }
 
         function initCloud() {
-            // Додав обробник помилок завантаження бази
             db.collection(SECRET_KEY).orderBy('createdAt', 'desc').onSnapshot(
                 snap => {
                     allRecipes = snap.docs.map(d => ({id: d.id, ...d.data()}));
@@ -254,10 +313,7 @@
                         }
                     }
                 },
-                error => {
-                    alert("Помилка завантаження з бази: " + error.message);
-                    console.error("Firebase Error:", error);
-                }
+                error => { alert("Помилка завантаження: " + error.message); }
             );
         }
 
@@ -266,7 +322,7 @@
             const filtered = currentActiveCat === 'All' ? allRecipes : allRecipes.filter(r => r.category === currentActiveCat);
             
             if (filtered.length === 0) {
-                grid.innerHTML = '<p style="text-align:center; opacity:0.3; margin-top:20px; grid-column: 1 / -1;">Поки що пусто. Додай щось смачненьке!</p>';
+                grid.innerHTML = '<p style="text-align:center; color:var(--text-muted); margin-top:40px; grid-column: 1/-1;">Список порожній</p>';
                 return;
             }
 
@@ -296,7 +352,7 @@
 
         function renderIngredients(textBlock, recipeId) {
             const container = document.getElementById('detIng');
-            if(!textBlock) { container.innerHTML = '<div class="check-text">Немає інгредієнтів</div>'; return; }
+            if(!textBlock) { container.innerHTML = '<div style="color:var(--text-muted)">Немає даних</div>'; return; }
             
             const lines = textBlock.split('\n').filter(l => l.trim().length > 0);
             const savedChecks = JSON.parse(localStorage.getItem('rezapp_chk_' + recipeId) || '[]');
@@ -305,7 +361,7 @@
                 const isChecked = savedChecks.includes(idx) ? 'done' : '';
                 return `
                 <div class="check-item ${isChecked}" onclick="toggleCheck('${recipeId}', ${idx}, this)">
-                    <div class="custom-checkbox"></div>
+                    <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
                     <div class="check-text">${line}</div>
                 </div>`;
             }).join('');
@@ -364,14 +420,12 @@
         }
 
         async function triggerDelete() {
-            if(confirm('Видалити цей рецепт назавжди?')) {
+            if(confirm('Видалити цей рецепт?')) {
                 try {
                     await db.collection(SECRET_KEY).doc(currentDetailId).delete();
                     localStorage.removeItem('rezapp_chk_' + currentDetailId); 
                     closeDetail();
-                } catch(error) {
-                    alert("Помилка видалення: " + error.message);
-                }
+                } catch(error) { alert("Помилка видалення: " + error.message); }
             }
         }
 
@@ -387,7 +441,6 @@
 
             if(!data.title) return alert("Введіть назву!");
 
-            // Блок відлову помилок
             try {
                 if (currentEditId) {
                     await db.collection(SECRET_KEY).doc(currentEditId).update(data);
@@ -397,14 +450,13 @@
                 closeForm();
             } catch (error) {
                 alert("Помилка збереження! Перевір інтернет або правила Firebase. Деталі: " + error.message);
-                console.error("Save Error:", error);
             }
         }
 
         function filter(cat) {
             currentActiveCat = cat;
             document.querySelectorAll('.cat-btn').forEach(b => {
-                b.classList.toggle('active', b.innerText.includes(cat) || (cat==='All' && b.innerText==='Всі'));
+                b.classList.toggle('active', b.innerText === cat || (cat === 'All' && b.innerText === 'Всі'));
             });
             renderGrid();
         }
