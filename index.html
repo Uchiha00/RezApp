@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#030303">
-    
+    <meta name="theme-color" content="#000000">
     <title>RezApp</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -17,309 +15,248 @@
     
     <style>
         :root {
-            --bg-dark: #030303;
-            --surface: #121214;
-            --surface-elevated: #1c1c1f;
-            --border: rgba(255, 255, 255, 0.06);
-            --border-highlight: rgba(255, 255, 255, 0.12);
-            
+            --bg-base: #000000;
+            --surface: #1c1c1e;
+            --surface-light: #2c2c2e;
             --text-main: #ffffff;
             --text-sec: #8e8e93;
-            --accent: #ffffff; 
-            --success: #ffffff;
+            --accent: #0a84ff;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
 
-        body { 
-            background-color: var(--bg-dark);
-            color: var(--text-main); 
-            /* Додаємо env() щоб відступити від камери/чубчика, але фон лишити */
-            padding: calc(20px + env(safe-area-inset-top)) 20px calc(120px + env(safe-area-inset-bottom)) 20px;
-            min-height: 100vh;
-            overflow-x: hidden;
+        html, body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            /* Використовуємо 100dvh для динамічної висоти на мобільних */
+            height: 100dvh;
+            overflow: hidden;
+            width: 100vw;
         }
 
-        body::before {
-            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 50%);
-            pointer-events: none; z-index: -1;
+        svg { stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* Головний контейнер додатку */
+        .app-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
         }
 
-        svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        /* Верхня частина з відступом під камеру */
+        header { 
+            padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px; 
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            position: sticky; top: 0; z-index: 50;
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;}
+        .date-sub { font-size: 13px; color: var(--text-sec); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; display: block;}
+        .logo { font-size: 34px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+        
+        /* Зона контенту зі скролом */
+        .main-scroll {
+            flex: 1; overflow-y: auto; overflow-x: hidden;
+            padding: 0 20px calc(100px + env(safe-area-inset-bottom)) 20px;
+            -webkit-overflow-scrolling: touch;
+        }
 
-        /* Хедер */
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .logo { font-size: 32px; font-weight: 800; letter-spacing: -1.5px; color: var(--text-main); display: flex; align-items: center; gap: 10px;}
-        .logo svg { width: 30px; height: 30px; stroke-width: 2; }
-
-        /* Безрамкові категорії */
-        .categories { display: flex; gap: 8px; margin-bottom: 30px; overflow-x: auto; scrollbar-width: none; padding-bottom: 5px; }
+        /* Категорії */
+        .categories { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding-bottom: 10px; }
         .categories::-webkit-scrollbar { display: none; }
         .cat-btn { 
-            background: transparent; border: none;
-            padding: 10px 20px; border-radius: 100px; color: var(--text-sec); 
-            font-size: 15px; font-weight: 600; transition: all 0.3s ease; cursor: pointer; white-space: nowrap;
+            background: var(--surface); border: none;
+            padding: 10px 20px; border-radius: 12px; color: var(--text-sec); 
+            font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s;
         }
-        .cat-btn.active { background: rgba(255,255,255,0.1); color: var(--text-main); }
+        .cat-btn.active { background: var(--text-main); color: var(--bg-base); }
 
-        /* Горизонтальні картки */
-        .grid { display: flex; flex-direction: column; gap: 18px; }
+        /* Картки в стилі App Store */
+        .grid { display: flex; flex-direction: column; gap: 30px; margin-top: 10px;}
         
         .card {
-            display: flex; align-items: center; gap: 16px;
-            background: var(--surface); 
-            border: 1px solid var(--border);
-            border-top: 1px solid rgba(255,255,255,0.1); 
-            border-radius: 28px; padding: 12px;
-            cursor: pointer; transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s;
-            opacity: 0; animation: slideInUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%; height: 420px;
+            border-radius: 28px; overflow: hidden; position: relative;
+            cursor: pointer; transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
         }
-        .card:active { transform: scale(0.96); background: var(--surface-elevated); }
+        .card:active { transform: scale(0.95); }
         
-        @keyframes slideInUp {
-            from { opacity: 0; transform: translateY(40px); }
-            to { opacity: 1; transform: translateY(0); }
+        .card img { width: 100%; height: 100%; object-fit: cover; }
+        .card::after {
+            content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
         }
-
-        .card-img-wrap {
-            width: 105px; height: 105px; border-radius: 20px; overflow: hidden; flex-shrink: 0;
-            background: #1a1a1c; position: relative;
-        }
-        .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
-        .card:hover .card-img-wrap img { transform: scale(1.1); }
         
-        .card-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .card-title { font-size: 18px; font-weight: 700; line-height: 1.25; color: #fff; margin-bottom: 8px; letter-spacing: -0.3px; }
-        
-        .tags-row { display: flex; gap: 6px; flex-wrap: wrap; }
-        .card-tag { 
-            font-size: 11px; font-weight: 700; text-transform: uppercase; 
-            background: rgba(255,255,255,0.06); padding: 6px 10px; border-radius: 10px; 
-            color: var(--text-sec); letter-spacing: 0.5px;
-            display: flex; align-items: center; gap: 4px;
+        .card-info { position: absolute; bottom: 0; left: 0; padding: 24px; width: 100%; z-index: 2; }
+        .card-tag { font-size: 12px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.7); letter-spacing: 1px; margin-bottom: 8px; display: block; }
+        .card-title { font-size: 28px; font-weight: 800; line-height: 1.1; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+
+        /* Нижня панель навігації (Tab Bar) */
+        .tab-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(28, 28, 30, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-top: 0.5px solid rgba(255,255,255,0.1);
+            padding: 10px 20px calc(10px + env(safe-area-inset-bottom)) 20px;
+            display: flex; justify-content: space-around; align-items: center; z-index: 100;
         }
-        .card-tag svg { width: 12px; height: 12px; stroke-width: 2.5;}
+        .tab-btn {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            color: var(--text-sec); background: none; border: none; font-size: 10px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+        .tab-btn svg { width: 24px; height: 24px; }
+        .tab-btn.active { color: var(--accent); }
 
-        .card-arrow { color: var(--border-highlight); padding-right: 10px; display: flex; align-items: center; opacity: 0.5; }
-
-        /* iOS-подібні вікна (Модалки) */
-        .ios-sheet {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-dark); z-index: 1000; overflow-y: auto; overflow-x: hidden;
+        /* Модальні вікна (Full Screen Sheets) */
+        .sheet {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background: var(--bg-base); z-index: 2000;
             transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+            display: flex; flex-direction: column;
         }
-        /* Закруглення кутів зверху для модалок (на нових айфонах виглядає супер) */
-        .ios-sheet.show { transform: translateY(0); box-shadow: 0 -10px 40px rgba(0,0,0,0.5); border-top-left-radius: 40px; border-top-right-radius: 40px;}
+        .sheet.show { transform: translateY(0); }
         
-        .sheet-indicator {
-            width: 40px; height: 5px; background: rgba(255,255,255,0.2); 
-            border-radius: 10px; margin: calc(12px + env(safe-area-inset-top)) auto 12px auto; z-index: 100; position: relative;
+        .sheet-header {
+            padding: calc(15px + env(safe-area-inset-top)) 20px 15px 20px;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 0.5px solid rgba(255,255,255,0.1);
+            position: sticky; top: 0; z-index: 10;
         }
+        .sheet-title { font-size: 17px; font-weight: 600; }
+        .close-btn { color: var(--accent); font-size: 17px; font-weight: 600; background: none; border: none; cursor: pointer; }
+        
+        .sheet-content { flex: 1; overflow-y: auto; padding-bottom: calc(40px + env(safe-area-inset-bottom)); }
 
-        /* Детальний вигляд */
-        .detail-img-box { position: relative; height: 400px; width: 100%; margin-top: calc(-40px - env(safe-area-inset-top)); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; overflow: hidden; }
-        .detail-img-box img { width: 100%; height: 100%; object-fit: cover; }
-        .detail-img-box::after { content:''; position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0,0,0,0.95) 100%); }
+        /* Деталі рецепта */
+        .recipe-hero { width: 100%; height: 400px; position: relative; }
+        .recipe-hero img { width: 100%; height: 100%; object-fit: cover; }
+        .recipe-hero::after { content: ''; position: absolute; bottom:0; left:0; width:100%; height:60%; background: linear-gradient(to top, var(--bg-base), transparent); }
         
-        /* Кнопки зсунуті від камери завдяки env() */
-        .top-btns { position: absolute; top: calc(20px + env(safe-area-inset-top)); width: 100%; padding: 0 20px; display: flex; justify-content: space-between; z-index: 10; }
-        .circle-btn { 
-            background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            color: white; border: 1px solid rgba(255,255,255,0.15); 
-            width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
-        }
-        .circle-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
+        .recipe-body { padding: 0 20px; margin-top: -60px; position: relative; z-index: 2;}
+        .r-tag { font-size: 13px; font-weight: 700; color: var(--text-sec); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .r-title { font-size: 36px; font-weight: 800; line-height: 1.1; margin-bottom: 30px; letter-spacing: -1px;}
 
-        /* Приховане меню */
-        #actionMenu {
-            display: none; position: absolute; top: calc(75px + env(safe-area-inset-top)); right: 20px; background: rgba(25,25,28,0.95); 
-            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border: 1px solid var(--border-highlight); border-top: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 10px; z-index: 20; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8); min-width: 190px;
-        }
-        .menu-btn { 
-            display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; 
-            background: none; border: none; padding: 14px 16px; color: var(--text-main); 
-            font-size: 16px; border-radius: 14px; cursor: pointer; font-weight: 500; transition: 0.2s;
-        }
-        .menu-btn:active { background: rgba(255,255,255,0.08); }
-        .menu-btn.red { color: #ff453a; }
-        .menu-btn.red svg { stroke: #ff453a; }
-        
-        .detail-content { padding: 0 24px calc(80px + env(safe-area-inset-bottom)) 24px; position: relative; z-index: 2; margin-top: -60px; }
-        .detail-title { font-size: 34px; font-weight: 800; margin: 15px 0 30px 0; line-height: 1.15; letter-spacing: -1px; }
+        .action-btns { display: flex; gap: 10px; margin-bottom: 40px; }
+        .a-btn { flex: 1; padding: 14px; border-radius: 14px; border: none; font-size: 15px; font-weight: 600; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: pointer; }
+        .a-btn.edit { background: var(--surface); color: var(--text-main); }
+        .a-btn.del { background: rgba(255, 69, 58, 0.15); color: #ff453a; }
 
-        .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin: 45px 0 20px; }
-        .section-title { font-size: 20px; color: var(--text-main); font-weight: 800; display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px;}
-        .section-title svg { color: var(--text-sec); width: 20px; height: 20px; stroke-width: 2;}
+        .sec-title { font-size: 22px; font-weight: 700; margin: 0 0 20px 0; border-bottom: 0.5px solid var(--surface); padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center;}
         
-        .text-btn { 
-            background: transparent; border: none; color: var(--text-sec); 
-            font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; 
-            padding: 8px 0; transition: 0.2s;
-        }
-        .text-btn:active { color: var(--text-main); }
+        /* Чекбокси Apple Reminders Style */
+        .check-item { display: flex; align-items: center; gap: 15px; padding: 15px 0; border-bottom: 0.5px solid var(--surface); cursor: pointer; transition: 0.2s;}
+        .check-item:active { opacity: 0.5; }
+        .circle-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--text-sec); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s;}
+        .circle-check svg { width: 12px; height: 12px; stroke: var(--bg-base); opacity: 0; stroke-width: 3;}
+        
+        .check-item.done .circle-check { background: var(--accent); border-color: var(--accent); }
+        .check-item.done .circle-check svg { opacity: 1; }
+        .check-item.done .check-text { color: var(--text-sec); text-decoration: line-through; }
+        .check-text { font-size: 17px; font-weight: 500; }
 
-        /* Інгредієнти */
-        .check-item { 
-            display: flex; align-items: flex-start; gap: 16px; margin-bottom: 14px; cursor: pointer; 
-            padding: 20px; background: var(--surface); border-radius: 24px; 
-            border: 1px solid var(--border); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); 
-        }
-        .check-item:active { transform: scale(0.98); }
-        .check-item.done { opacity: 0.3; background: transparent; border-color: transparent; }
-        .check-item.done .check-text { text-decoration: line-through; color: var(--text-sec); }
-        
-        .custom-checkbox { 
-            width: 26px; height: 26px; border: 2px solid var(--text-sec); border-radius: 8px; 
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; 
-        }
-        .custom-checkbox svg { opacity: 0; width: 14px; height: 14px; stroke-width: 3.5; transform: scale(0.3); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .check-item.done .custom-checkbox { background: var(--text-main); border-color: var(--text-main); color: var(--bg-dark); }
-        .check-item.done .custom-checkbox svg { opacity: 1; transform: scale(1); }
-        
-        .check-text { font-size: 16px; line-height: 1.5; padding-top: 2px; font-weight: 500; }
-
-        /* Процес */
-        .plain-text-steps { 
-            font-size: 17px; line-height: 1.8; white-space: pre-line; color: rgba(255,255,255,0.9); 
-            background: var(--surface); padding: 26px; border-radius: 28px; border: 1px solid var(--border);
-            font-weight: 400; letter-spacing: 0.2px;
-        }
+        .steps-text { font-size: 17px; line-height: 1.6; color: rgba(255,255,255,0.9); }
 
         /* Форма */
-        .form-inner { max-width: 500px; margin: 0 auto; padding: 10px 20px calc(80px + env(safe-area-inset-bottom)) 20px; }
-        .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        .form-header h2 { font-size: 32px; font-weight: 800; letter-spacing: -1px;}
-        
-        .input-group { margin-bottom: 24px; }
-        .input-label { font-size: 12px; color: var(--text-sec); margin-bottom: 10px; display: block; font-weight: 700; padding-left: 6px; text-transform: uppercase; letter-spacing: 1px;}
-        
+        .form-wrap { padding: 20px; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-sec); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; padding-left: 5px;}
         input, textarea, select { 
-            width: 100%; padding: 20px 22px; background: var(--surface); border: 1px solid var(--border); 
-            border-radius: 20px; color: var(--text-main); font-size: 16px; outline: none; transition: 0.3s;
-            -webkit-appearance: none; font-weight: 500;
+            width: 100%; padding: 18px 20px; background: var(--surface); border: none; 
+            border-radius: 16px; color: var(--text-main); font-size: 17px; outline: none; -webkit-appearance: none;
         }
-        input:focus, textarea:focus, select:focus { border-color: rgba(255,255,255,0.3); background: var(--surface-elevated); box-shadow: 0 0 0 4px rgba(255,255,255,0.05); }
+        input:focus, textarea:focus, select:focus { background: var(--surface-light); }
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
-        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        
-        .btn-main { 
-            background: var(--text-main); color: var(--bg-dark); padding: 22px; border-radius: 22px; 
-            width: 100%; font-weight: 800; border: none; font-size: 17px; cursor: pointer; margin-top: 20px; transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
+        .btn-submit { 
+            background: var(--accent); color: white; padding: 20px; border-radius: 16px; 
+            width: 100%; font-weight: 700; border: none; font-size: 17px; margin-top: 10px; cursor: pointer;
         }
-        .btn-main:active { transform: scale(0.96); box-shadow: 0 5px 15px rgba(255,255,255,0.1); }
-        
-        /* Плаваюча кнопка */
-        .fab {
-            position: fixed; bottom: calc(35px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            color: var(--bg-dark); padding: 18px 32px; border-radius: 100px; border: none;
-            font-size: 16px; font-weight: 800; box-shadow: 0 15px 40px rgba(0,0,0,0.7); z-index: 100; 
-            cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .fab:active { transform: translateX(-50%) scale(0.92); }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="logo">
-            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-            RezApp
-        </div>
-    </header>
-
-    <div class="categories">
-        <button class="cat-btn active" onclick="filter('All')">Всі рецепти</button>
-        <button class="cat-btn" onclick="filter('Загальне')">Загальне</button>
-        <button class="cat-btn" onclick="filter('Сніданок')">Сніданок</button>
-        <button class="cat-btn" onclick="filter('Протеїн')">Протеїн</button>
-    </div>
-
-    <div class="grid" id="grid"></div>
-
-    <button class="fab" onclick="openForm()">
-        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Створити запис
-    </button>
-
-    <div id="detailView" class="ios-sheet">
-        <div class="sheet-indicator"></div>
-        <div class="top-btns">
-            <button class="circle-btn" onclick="closeDetail()">
-                <svg viewBox="0 0 24 24"><path d="M19 12H5"></path><polyline points="12 19 5 12 12 5"></polyline></svg>
-            </button>
-            <button class="circle-btn" onclick="toggleMenu()">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"></circle><circle cx="12" cy="5" r="1.5"></circle><circle cx="12" cy="19" r="1.5"></circle></svg>
-            </button>
-        </div>
-        
-        <div id="actionMenu">
-            <button class="menu-btn" onclick="triggerEdit()">
-                <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                Редагувати
-            </button>
-            <button class="menu-btn red" onclick="triggerDelete()">
-                <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                Видалити
-            </button>
-        </div>
-
-        <div class="detail-img-box">
-            <img id="detImg" src="">
-        </div>
-        
-        <div class="detail-content">
-            <div class="tags-row" style="margin-bottom: 18px;">
-                <div id="detTag" class="card-tag" style="background: rgba(255,255,255,0.15); color: #fff;"></div>
-                <div id="detPortion" class="card-tag">
-                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                    <span></span>
+    <div class="app-container">
+        <header>
+            <div class="header-top">
+                <div>
+                    <span class="date-sub" id="currentDate">Сьогодні</span>
+                    <div class="logo">RezApp</div>
                 </div>
             </div>
-            <div id="detTitle" class="detail-title"></div>
             
-            <div class="section-header">
-                <div class="section-title">
-                    <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line></svg>
+            <div class="categories">
+                <button class="cat-btn active" onclick="filter('All')">Всі</button>
+                <button class="cat-btn" onclick="filter('Загальне')">Загальне</button>
+                <button class="cat-btn" onclick="filter('Сніданок')">Сніданок</button>
+                <button class="cat-btn" onclick="filter('Протеїн')">Протеїн</button>
+            </div>
+        </header>
+
+        <div class="main-scroll" id="grid">
+            </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="closeAll()">
+                <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                Головна
+            </button>
+            <button class="tab-btn" onclick="openForm()">
+                <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Додати
+            </button>
+        </div>
+    </div>
+
+    <div id="detailSheet" class="sheet">
+        <div class="sheet-header">
+            <div style="width: 60px;"></div> <div class="sheet-title">Рецепт</div>
+            <button class="close-btn" style="width: 60px; text-align: right;" onclick="closeDetail()">Готово</button>
+        </div>
+        <div class="sheet-content">
+            <div class="recipe-hero"><img id="detImg" src=""></div>
+            <div class="recipe-body">
+                <div class="r-tag"><span id="detTag"></span> • <span id="detPortion"></span></div>
+                <div class="r-title" id="detTitle"></div>
+                
+                <div class="action-btns">
+                    <button class="a-btn edit" onclick="triggerEdit()">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        Редагувати
+                    </button>
+                    <button class="a-btn del" onclick="triggerDelete()">
+                        <svg viewBox="0 0 24 24" width="18" height="18"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        Видалити
+                    </button>
+                </div>
+
+                <div class="sec-title">
                     Інгредієнти
+                    <button onclick="resetIngredients()" style="background:none; border:none; color:var(--accent); font-size:14px; font-weight:600;">Очистити</button>
                 </div>
-                <button class="text-btn" onclick="resetIngredients()">Скинути список</button>
+                <div id="detIng" style="margin-bottom: 40px;"></div>
+
+                <div class="sec-title">Приготування</div>
+                <div id="detSteps" class="steps-text"></div>
             </div>
-            <div id="detIng"></div>
-            
-            <div class="section-header">
-                <div class="section-title">
-                    <svg viewBox="0 0 24 24"><path d="M12 2v20"></path><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                    Приготування
-                </div>
-            </div>
-            <div id="detSteps" class="plain-text-steps"></div>
         </div>
     </div>
 
-    <div id="formModal" class="ios-sheet">
-        <div class="sheet-indicator"></div>
-        <div class="form-inner">
-            <div class="form-header">
-                <h2 id="formTitle">Новий запис</h2>
-                <button class="circle-btn" style="width: 44px; height: 44px; background: rgba(255,255,255,0.05);" onclick="closeForm()">
-                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-            </div>
-
+    <div id="formSheet" class="sheet">
+        <div class="sheet-header">
+            <button class="close-btn" style="width: 80px; text-align: left; color: var(--text-main);" onclick="closeForm()">Скасувати</button>
+            <div class="sheet-title" id="formTitle">Новий запис</div>
+            <div style="width: 80px;"></div>
+        </div>
+        <div class="sheet-content form-wrap">
             <div class="input-group">
-                <label class="input-label">Назва страви</label>
-                <input type="text" id="recipeTitle" placeholder="Сирники з бананом">
+                <label>Назва страви</label>
+                <input type="text" id="recipeTitle" placeholder="Введіть назву">
             </div>
 
             <div class="row-2">
                 <div class="input-group">
-                    <label class="input-label">Категорія</label>
+                    <label>Категорія</label>
                     <select id="recipeCat">
                         <option value="Загальне">Загальне</option>
                         <option value="Сніданок">Сніданок</option>
@@ -327,37 +264,41 @@
                     </select>
                 </div>
                 <div class="input-group">
-                    <label class="input-label">Розмір порції</label>
+                    <label>Порція</label>
                     <select id="recipePortion">
                         <option value="1 порція">1 порція</option>
                         <option value="2 порції" selected>2 порції</option>
                         <option value="3 порції">3 порції</option>
                         <option value="4 порції">4 порції</option>
-                        <option value="На компанію">На компанію</option>
+                        <option value="Компанія">Компанія</option>
                     </select>
                 </div>
             </div>
 
             <div class="input-group">
-                <label class="input-label">Обкладинка (URL)</label>
-                <input type="text" id="recipePhoto" placeholder="Посилання на картинку">
+                <label>Фото (URL)</label>
+                <input type="text" id="recipePhoto" placeholder="https://...">
             </div>
 
             <div class="input-group">
-                <label class="input-label">Список продуктів</label>
-                <textarea id="recipeIng" rows="5" placeholder="Кожен інгредієнт з нового рядка..."></textarea>
+                <label>Інгредієнти (З нового рядка)</label>
+                <textarea id="recipeIng" rows="5" placeholder="Яйця&#10;Сир&#10;Молоко"></textarea>
             </div>
 
             <div class="input-group">
-                <label class="input-label">Процес готування</label>
-                <textarea id="recipeSteps" rows="6" placeholder="Опис процесу..."></textarea>
+                <label>Процес</label>
+                <textarea id="recipeSteps" rows="6" placeholder="Опис кроків..."></textarea>
             </div>
             
-            <button class="btn-main" onclick="saveRecipe()">Зберегти рецепт</button>
+            <button class="btn-submit" onclick="saveRecipe()">Зберегти</button>
         </div>
     </div>
 
     <script>
+        // Встановлення дати
+        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        document.getElementById('currentDate').innerText = new Date().toLocaleDateString('uk-UA', options);
+
         const firebaseConfig = {
           apiKey: "AIzaSyDKokz-gKpWZJV__yiYz2MzbybqZX1n-Ws",
           authDomain: "rezapp-42b6f.firebaseapp.com",
@@ -383,22 +324,17 @@
                 snap => {
                     allRecipes = snap.docs.map(d => ({id: d.id, ...d.data()}));
                     renderGrid();
-                    
                     if(currentDetailId) {
                         const exists = allRecipes.find(r => r.id === currentDetailId);
                         if(exists) {
                             document.getElementById('detTitle').innerText = exists.title;
                             document.getElementById('detImg').src = exists.photo || 'https://via.placeholder.com/500';
                             document.getElementById('detSteps').innerText = exists.steps;
-                            
-                            const portDiv = document.getElementById('detPortion');
-                            if(exists.portion) {
-                                portDiv.style.display = 'flex'; portDiv.querySelector('span').innerText = exists.portion;
-                            } else { portDiv.style.display = 'none'; }
+                            document.getElementById('detPortion').innerText = exists.portion || '2 порції';
                         } else { closeDetail(); }
                     }
                 },
-                error => { alert("Помилка завантаження: " + error.message); }
+                error => { alert("Помилка бази: " + error.message); }
             );
         }
 
@@ -407,36 +343,19 @@
             const filtered = currentActiveCat === 'All' ? allRecipes : allRecipes.filter(r => r.category === currentActiveCat);
             
             if (filtered.length === 0) {
-                grid.innerHTML = '<div style="text-align:center; color:var(--text-sec); margin-top:80px; font-size:16px; font-weight: 500;">Немає рецептів у цій категорії</div>';
+                grid.innerHTML = '<div style="text-align:center; color:var(--text-sec); margin-top:80px; font-weight: 500;">Немає рецептів</div>';
                 return;
             }
 
-            grid.innerHTML = filtered.map((r, i) => {
-                const portionHTML = r.portion ? `
-                    <span class="card-tag">
-                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
-                        ${r.portion}
-                    </span>` : '';
-
-                const animDelay = i * 0.06;
-
-                return `
-                <div class="card" style="animation-delay: ${animDelay}s" onclick="openDetail('${r.id}')">
-                    <div class="card-img-wrap">
-                        <img src="${r.photo || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?q=80&w=600'}">
-                    </div>
+            grid.innerHTML = filtered.map(r => `
+                <div class="card" onclick="openDetail('${r.id}')">
+                    <img src="${r.photo || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?q=80&w=600'}">
                     <div class="card-info">
+                        <span class="card-tag">${r.category}</span>
                         <div class="card-title">${r.title}</div>
-                        <div class="tags-row">
-                            <span class="card-tag">${r.category}</span>
-                            ${portionHTML}
-                        </div>
                     </div>
-                    <div class="card-arrow">
-                        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                    </div>
-                </div>`
-            }).join('');
+                </div>
+            `).join('');
         }
 
         function openDetail(id) {
@@ -445,18 +364,12 @@
             
             document.getElementById('detImg').src = r.photo || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?q=80&w=800';
             document.getElementById('detTag').innerText = r.category;
-            
-            const portDiv = document.getElementById('detPortion');
-            if(r.portion) {
-                portDiv.style.display = 'flex'; portDiv.querySelector('span').innerText = r.portion;
-            } else { portDiv.style.display = 'none'; }
-
+            document.getElementById('detPortion').innerText = r.portion || '2 порції';
             document.getElementById('detTitle').innerText = r.title;
             document.getElementById('detSteps').innerText = r.steps || "Немає опису.";
             
             renderIngredients(r.ingredients, id);
-            
-            setTimeout(() => { document.getElementById('detailView').classList.add('show'); }, 10);
+            document.getElementById('detailSheet').classList.add('show');
         }
 
         function renderIngredients(textBlock, recipeId) {
@@ -470,7 +383,7 @@
                 const isChecked = savedChecks.includes(idx) ? 'done' : '';
                 return `
                 <div class="check-item ${isChecked}" onclick="toggleCheck('${recipeId}', ${idx}, this)">
-                    <div class="custom-checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                    <div class="circle-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
                     <div class="check-text">${line}</div>
                 </div>`;
             }).join('');
@@ -493,14 +406,8 @@
         }
 
         function closeDetail() { 
-            document.getElementById('detailView').classList.remove('show');
-            document.getElementById('actionMenu').style.display = 'none';
+            document.getElementById('detailSheet').classList.remove('show');
             setTimeout(() => { currentDetailId = null; }, 500);
-        }
-
-        function toggleMenu() {
-            const menu = document.getElementById('actionMenu');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         }
 
         function openForm(isEdit = false) {
@@ -510,13 +417,10 @@
                 ['recipeTitle', 'recipePhoto', 'recipeIng', 'recipeSteps'].forEach(id => document.getElementById(id).value = '');
                 document.getElementById('recipePortion').value = '2 порції';
             }
-            document.getElementById('actionMenu').style.display = 'none';
-            setTimeout(() => { document.getElementById('formModal').classList.add('show'); }, 10);
+            document.getElementById('formSheet').classList.add('show');
         }
         
-        function closeForm() { 
-            document.getElementById('formModal').classList.remove('show'); 
-        }
+        function closeForm() { document.getElementById('formSheet').classList.remove('show'); }
 
         function triggerEdit() {
             const r = allRecipes.find(x => x.id === currentDetailId);
@@ -528,7 +432,9 @@
             document.getElementById('recipePhoto').value = r.photo;
             document.getElementById('recipeIng').value = r.ingredients;
             document.getElementById('recipeSteps').value = r.steps;
-            openForm(true);
+            
+            closeDetail();
+            setTimeout(() => { openForm(true); }, 300);
         }
 
         async function triggerDelete() {
@@ -537,7 +443,7 @@
                     await db.collection(SECRET_KEY).doc(currentDetailId).delete();
                     localStorage.removeItem('rezapp_chk_' + currentDetailId); 
                     closeDetail();
-                } catch(error) { alert("Помилка видалення: " + error.message); }
+                } catch(error) { alert("Помилка: " + error.message); }
             }
         }
 
@@ -561,15 +467,20 @@
                     await db.collection(SECRET_KEY).add(data);
                 }
                 closeForm();
-            } catch (error) { alert("Помилка збереження! Деталі: " + error.message); }
+            } catch (error) { alert("Помилка збереження!"); }
         }
 
         function filter(cat) {
             currentActiveCat = cat;
             document.querySelectorAll('.cat-btn').forEach(b => {
-                b.classList.toggle('active', b.innerText === cat || (cat === 'All' && b.innerText === 'Всі рецепти'));
+                b.classList.toggle('active', b.innerText === cat || (cat === 'All' && b.innerText === 'Всі'));
             });
             renderGrid();
+        }
+
+        function closeAll() {
+            closeDetail();
+            closeForm();
         }
     </script>
 </body>
