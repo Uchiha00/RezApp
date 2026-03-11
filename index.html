@@ -2,7 +2,12 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#030303">
+    
     <title>RezApp</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -12,7 +17,6 @@
     
     <style>
         :root {
-            /* Ультра-преміальна OLED палітра */
             --bg-dark: #030303;
             --surface: #121214;
             --surface-elevated: #1c1c1f;
@@ -20,7 +24,7 @@
             --border-highlight: rgba(255, 255, 255, 0.12);
             
             --text-main: #ffffff;
-            --text-sec: #8e8e93; /* Класичний iOS сірий */
+            --text-sec: #8e8e93;
             --accent: #ffffff; 
             --success: #ffffff;
         }
@@ -30,12 +34,12 @@
         body { 
             background-color: var(--bg-dark);
             color: var(--text-main); 
-            padding: 20px 20px 120px 20px;
+            /* Додаємо env() щоб відступити від камери/чубчика, але фон лишити */
+            padding: calc(20px + env(safe-area-inset-top)) 20px calc(120px + env(safe-area-inset-bottom)) 20px;
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        /* Тонкий фоновий градієнт для глибини */
         body::before {
             content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.03) 0%, transparent 50%);
@@ -45,11 +49,11 @@
         svg { width: 22px; height: 22px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
         /* Хедер */
-        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-top: 15px; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .logo { font-size: 32px; font-weight: 800; letter-spacing: -1.5px; color: var(--text-main); display: flex; align-items: center; gap: 10px;}
         .logo svg { width: 30px; height: 30px; stroke-width: 2; }
 
-        /* Безрамкові категорії (Apple Style) */
+        /* Безрамкові категорії */
         .categories { display: flex; gap: 8px; margin-bottom: 30px; overflow-x: auto; scrollbar-width: none; padding-bottom: 5px; }
         .categories::-webkit-scrollbar { display: none; }
         .cat-btn { 
@@ -59,14 +63,14 @@
         }
         .cat-btn.active { background: rgba(255,255,255,0.1); color: var(--text-main); }
 
-        /* Горизонтальні картки (High-End Style) */
+        /* Горизонтальні картки */
         .grid { display: flex; flex-direction: column; gap: 18px; }
         
         .card {
             display: flex; align-items: center; gap: 16px;
             background: var(--surface); 
             border: 1px solid var(--border);
-            border-top: 1px solid rgba(255,255,255,0.1); /* Світловий блік зверху */
+            border-top: 1px solid rgba(255,255,255,0.1); 
             border-radius: 28px; padding: 12px;
             cursor: pointer; transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), background 0.3s;
             opacity: 0; animation: slideInUp 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
@@ -105,22 +109,22 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-dark); z-index: 1000; overflow-y: auto; overflow-x: hidden;
             transform: translateY(100%); transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
-            border-top-left-radius: 36px; border-top-right-radius: 36px;
         }
-        .ios-sheet.show { transform: translateY(0); box-shadow: 0 -10px 40px rgba(0,0,0,0.5); }
+        /* Закруглення кутів зверху для модалок (на нових айфонах виглядає супер) */
+        .ios-sheet.show { transform: translateY(0); box-shadow: 0 -10px 40px rgba(0,0,0,0.5); border-top-left-radius: 40px; border-top-right-radius: 40px;}
         
-        /* Індикатор свайпу (Pull Indicator) */
         .sheet-indicator {
             width: 40px; height: 5px; background: rgba(255,255,255,0.2); 
-            border-radius: 10px; margin: 12px auto; z-index: 100; position: relative;
+            border-radius: 10px; margin: calc(12px + env(safe-area-inset-top)) auto 12px auto; z-index: 100; position: relative;
         }
 
         /* Детальний вигляд */
-        .detail-img-box { position: relative; height: 400px; width: 100%; margin-top: -30px; border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; overflow: hidden; }
+        .detail-img-box { position: relative; height: 400px; width: 100%; margin-top: calc(-40px - env(safe-area-inset-top)); border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; overflow: hidden; }
         .detail-img-box img { width: 100%; height: 100%; object-fit: cover; }
         .detail-img-box::after { content:''; position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(0,0,0,0.95) 100%); }
         
-        .top-btns { position: absolute; top: 40px; width: 100%; padding: 0 20px; display: flex; justify-content: space-between; z-index: 10; }
+        /* Кнопки зсунуті від камери завдяки env() */
+        .top-btns { position: absolute; top: calc(20px + env(safe-area-inset-top)); width: 100%; padding: 0 20px; display: flex; justify-content: space-between; z-index: 10; }
         .circle-btn { 
             background: rgba(0,0,0,0.3); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             color: white; border: 1px solid rgba(255,255,255,0.15); 
@@ -130,7 +134,7 @@
 
         /* Приховане меню */
         #actionMenu {
-            display: none; position: absolute; top: 95px; right: 20px; background: rgba(25,25,28,0.95); 
+            display: none; position: absolute; top: calc(75px + env(safe-area-inset-top)); right: 20px; background: rgba(25,25,28,0.95); 
             backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
             border: 1px solid var(--border-highlight); border-top: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 10px; z-index: 20; 
             box-shadow: 0 20px 50px rgba(0,0,0,0.8); min-width: 190px;
@@ -144,7 +148,7 @@
         .menu-btn.red { color: #ff453a; }
         .menu-btn.red svg { stroke: #ff453a; }
         
-        .detail-content { padding: 0 24px 80px 24px; position: relative; z-index: 2; margin-top: -60px; }
+        .detail-content { padding: 0 24px calc(80px + env(safe-area-inset-bottom)) 24px; position: relative; z-index: 2; margin-top: -60px; }
         .detail-title { font-size: 34px; font-weight: 800; margin: 15px 0 30px 0; line-height: 1.15; letter-spacing: -1px; }
 
         .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin: 45px 0 20px; }
@@ -158,7 +162,7 @@
         }
         .text-btn:active { color: var(--text-main); }
 
-        /* Інгредієнти (Преміум чекбокси) */
+        /* Інгредієнти */
         .check-item { 
             display: flex; align-items: flex-start; gap: 16px; margin-bottom: 14px; cursor: pointer; 
             padding: 20px; background: var(--surface); border-radius: 24px; 
@@ -185,8 +189,8 @@
             font-weight: 400; letter-spacing: 0.2px;
         }
 
-        /* Форма (Стилі полів) */
-        .form-inner { max-width: 500px; margin: 0 auto; padding: 10px 20px 80px 20px; }
+        /* Форма */
+        .form-inner { max-width: 500px; margin: 0 auto; padding: 10px 20px calc(80px + env(safe-area-inset-bottom)) 20px; }
         .form-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
         .form-header h2 { font-size: 32px; font-weight: 800; letter-spacing: -1px;}
         
@@ -211,7 +215,7 @@
         
         /* Плаваюча кнопка */
         .fab {
-            position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: calc(35px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             color: var(--bg-dark); padding: 18px 32px; border-radius: 100px; border: none;
             font-size: 16px; font-weight: 800; box-shadow: 0 15px 40px rgba(0,0,0,0.7); z-index: 100; 
