@@ -7,9 +7,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#08081a">
+    <meta name="theme-color" content="#100b16">
 
-    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiUmV6QXBwIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzA4MDgxYSIsInRoZW1lX2NvbG9yIjoiIzA4MDgxYSJ9">
+    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiUmV6QXBwIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzEwMGIxNiIsInRoZW1lX2NvbG9yIjoiIzEwMGIxNiJ9">
     
     <title>RezApp</title>
     
@@ -20,22 +20,22 @@
     
     <style>
         :root {
-            --bg-absolute: #08081a; 
-            --glass-card: rgba(255, 255, 255, 0.04); 
-            --glass-strong: rgba(255, 255, 255, 0.09);
+            --bg-absolute: #100b16; 
+            --glass-card: rgba(255, 255, 255, 0.06); 
+            --glass-strong: rgba(255, 255, 255, 0.12);
             --border: rgba(255, 255, 255, 0.08); 
             --border-light: rgba(255, 255, 255, 0.2);
             --text-main: #ffffff;
             --text-sec: rgba(255, 255, 255, 0.6);
         }
 
-        /* Ідеальна база для iOS: сторінка не скролиться, скролиться тільки контейнер */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             min-height: 100vh;
-            background-color: var(--bg-absolute);
+            /* Зробили прозорим, щоб пропустити картинку */
+            background-color: transparent; 
             color: var(--text-main);
             font-family: 'Plus Jakarta Sans', sans-serif;
             -webkit-tap-highlight-color: transparent;
@@ -43,25 +43,30 @@
             overscroll-behavior-y: none;
         }
 
-        /* МАГІЯ CANVAS: Апаратне прискорення для шаленої плавності */
-        #bg-canvas, .bg-overlay {
-            position: absolute; 
+        /* --- СТАТИЧНИЙ ФОН-КАРТИНКА --- */
+        .bg-image {
+            position: fixed; 
+            top: -5%; left: -5%;
+            width: 110%; height: 110%;
+            background-image: url('https://i.pinimg.com/736x/d9/99/ee/d999ee19cb39781450da71c073a0f016.jpg'); 
+            background-size: cover;
+            background-position: center;
+            background-color: var(--bg-absolute); 
+            z-index: -3;
+      }
+
+        /* Затемнення та легкий блюр */
+        .bg-overlay {
+            position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            z-index: -2; pointer-events: none; display: block;
-            will-change: transform;
-            transform: translateZ(0); 
-        }
-
-        .bg-overlay {
-            background: rgba(8, 8, 26, 0.4); 
-            backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
-            z-index: -1;
+            background: linear-gradient(to bottom, rgba(16, 11, 22, 0.3), rgba(16, 11, 22, 0.7)); 
+            backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            z-index: -2;
         }
 
         svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-        /* ОБЛАСТЬ СКРОЛУ (зафіксована на весь екран) */
         .app-container {
             position: fixed;
             inset: 0;
@@ -165,11 +170,10 @@
         }
         .card-tag svg { width: 12px; height: 12px; stroke-width: 2.5;}
 
-        /* Модалка на всю висоту */
         .ios-sheet {
             position: fixed; top: 0; left: 0; right: 0; bottom: 0;
             width: 100%; height: 100%;
-            background: rgba(8,8,26,0.95); backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
+            background: rgba(16,11,22,0.95); backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
             z-index: 1000; overflow-y: auto; overflow-x: hidden;
             transform: translateY(100%); 
             transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
@@ -198,7 +202,7 @@
         .detail-img-box img { width: 100%; height: 100%; object-fit: cover; }
         .detail-img-box::after { 
             content:''; position: absolute; top:0; left:0; width:100%; height:100%; 
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 40%, rgba(8,8,26,0.95) 95%, rgba(8,8,26,1) 100%); 
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 40%, rgba(16,11,22,0.95) 95%, rgba(16,11,22,1) 100%); 
         }
         
         .detail-content { 
@@ -262,7 +266,7 @@
         .form-header { 
             padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px;
             display: flex; justify-content: space-between; align-items: center; 
-            background: rgba(8,8,26,0.95); backdrop-filter: blur(30px); position: sticky; top: 0; z-index: 10;
+            background: rgba(16,11,22,0.95); backdrop-filter: blur(30px); position: sticky; top: 0; z-index: 10;
         }
         .form-header h2 { font-size: 30px; font-weight: 800;}
         .form-scroll-area { padding: 30px 20px calc(120px + env(safe-area-inset-bottom)) 20px; }
@@ -287,7 +291,6 @@
         }
         .btn-main:active { transform: scale(0.96); }
         
-        /* Кнопка "+" в стилі iOS 17 */
         .fab {
             position: fixed; 
             bottom: calc(25px + env(safe-area-inset-bottom)); 
@@ -310,7 +313,7 @@
 </head>
 <body>
 
-    <canvas id="bg-canvas"></canvas>
+    <div class="bg-image"></div>
     <div class="bg-overlay"></div>
 
     <div class="app-container">
@@ -448,50 +451,6 @@
     </div>
 
     <script>
-        const canvas = document.getElementById('bg-canvas');
-        const ctx = canvas.getContext('2d', { alpha: false });
-        let W, H;
-
-        function resizeCanvas() {
-            W = canvas.width = window.innerWidth;
-            H = canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 100));
-        resizeCanvas();
-
-        const orbs = [
-            { x: 0.15, y: 0.20, r: 0.70, color: [180, 136, 255], speed: 0.00016, phase: 0.0, moveX: 0.20, moveY: 0.15 },
-            { x: 0.55, y: 0.55, r: 0.55, color: [180, 136, 255], speed: 0.00009, phase: 3.3, moveX: 0.14, moveY: 0.18 },
-            { x: 0.85, y: 0.80, r: 0.65, color: [255, 143, 171], speed: 0.00012, phase: 1.6, moveX: 0.18, moveY: 0.20 },
-            { x: 0.78, y: 0.18, r: 0.45, color: [255, 143, 171], speed: 0.00014, phase: 5.0, moveX: 0.15, moveY: 0.12 },
-        ];
-
-        // Оптимізований рендер Canvas (їсть менше батареї і не лагає)
-        function renderCanvas(ts) {
-            ctx.fillStyle = '#08081a'; 
-            ctx.fillRect(0, 0, W, H);
-
-            for (let i = 0; i < orbs.length; i++) {
-                let o = orbs[i];
-                let cx = (o.x + Math.sin(ts * o.speed + o.phase) * o.moveX) * W;
-                let cy = (o.y + Math.cos(ts * o.speed * 0.83 + o.phase) * o.moveY) * H;
-                let radius = o.r * Math.min(W, H);
-
-                let grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-                grad.addColorStop(0, `rgba(${o.color[0]}, ${o.color[1]}, ${o.color[2]}, 0.5)`);
-                grad.addColorStop(0.5, `rgba(${o.color[0]}, ${o.color[1]}, ${o.color[2]}, 0.15)`);
-                grad.addColorStop(1, `rgba(${o.color[0]}, ${o.color[1]}, ${o.color[2]}, 0)`);
-
-                ctx.beginPath();
-                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-                ctx.fillStyle = grad;
-                ctx.fill();
-            }
-            requestAnimationFrame(renderCanvas);
-        }
-        requestAnimationFrame(renderCanvas);
-
         const firebaseConfig = {
           apiKey: "AIzaSyDKokz-gKpWZJV__yiYz2MzbybqZX1n-Ws",
           authDomain: "rezapp-42b6f.firebaseapp.com",
@@ -772,3 +731,5 @@
     </script>
 </body>
 </html>
+
+
