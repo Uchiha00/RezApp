@@ -29,24 +29,25 @@
             --text-sec: rgba(255, 255, 255, 0.6);
         }
 
-        /* Використовуємо DVH для ідеального розміру на мобільних */
+        /* Жорстко фіксуємо сторінку по координатах, щоб вбити смугу Home Indicator */
         html, body { 
             position: fixed; 
-            top: 0; left: 0; 
-            width: 100vw; height: 100dvh;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
             margin: 0; padding: 0; 
             background-color: var(--bg-absolute); 
             color: var(--text-main); 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             -webkit-tap-highlight-color: transparent;
             overflow: hidden; 
+            overscroll-behavior-y: none; /* Вимикає гумовий відскок всієї сторінки */
         }
 
-        /* Canvas фон чітко по краях */
+        /* МАГІЯ CANVAS: Робимо його на 120%, щоб він вилізав за краї екрана */
         #bg-canvas, .bg-overlay {
-            position: fixed; 
-            top: 0; left: 0;
-            width: 100vw; height: 100dvh;
+            position: absolute; 
+            top: -10vh; left: -10vw;
+            width: 120vw; height: 120vh;
             z-index: -2; pointer-events: none; display: block;
         }
 
@@ -64,7 +65,7 @@
             overflow-y: auto; overflow-x: hidden; z-index: 1;
             -webkit-overflow-scrolling: touch;
             padding-top: env(safe-area-inset-top); 
-            padding-bottom: calc(110px + env(safe-area-inset-bottom));
+            padding-bottom: calc(130px + env(safe-area-inset-bottom));
         }
 
         header { 
@@ -156,11 +157,14 @@
         }
         .card-tag svg { width: 12px; height: 12px; stroke-width: 2.5;}
 
+        /* Оновлено модалки: 100% замість 100dvh */
         .ios-sheet {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
             background: rgba(8,8,26,0.95); backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
             z-index: 1000; overflow-y: auto; overflow-x: hidden;
-            transform: translateY(100dvh); transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+            transform: translateY(100%); 
+            transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
             will-change: transform;
         }
         .ios-sheet.show { transform: translateY(0); }
@@ -178,7 +182,7 @@
 
         .detail-img-box { 
             position: relative; 
-            height: 55dvh; width: 100%; 
+            height: 55vh; width: 100%; 
             border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; 
             overflow: hidden; z-index: 1;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
@@ -591,7 +595,7 @@
             
             const sheet = document.getElementById('detailView');
             sheet.style.transition = 'transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)';
-            sheet.style.transform = ''; // Очищаємо інлайн-стилі, щоб спрацював CSS клас
+            sheet.style.transform = ''; 
             setTimeout(() => { sheet.classList.add('show'); }, 10);
         }
 
@@ -629,13 +633,12 @@
 
         function closeDetail() { 
             const sheet = document.getElementById('detailView');
-            // Плавно дозакриваємо модалку, якщо вона була частково стягнута
             sheet.style.transition = 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)';
-            sheet.style.transform = 'translateY(100dvh)';
+            sheet.style.transform = 'translateY(100%)'; 
             
             setTimeout(() => { 
                 sheet.classList.remove('show'); 
-                sheet.style.transform = ''; // Зкидаємо для наступного відкриття
+                sheet.style.transform = ''; 
                 currentDetailId = null; 
             }, 400);
         }
@@ -656,7 +659,7 @@
         function closeForm() { 
             const modal = document.getElementById('formModal');
             modal.style.transition = 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)';
-            modal.style.transform = 'translateY(100dvh)';
+            modal.style.transform = 'translateY(100%)'; 
             setTimeout(() => { 
                 modal.classList.remove('show'); 
                 modal.style.transform = ''; 
@@ -712,7 +715,7 @@
             renderGrid();
         }
 
-        // --- ЛОГІКА СВАЙПУ ВНИЗ (ОНОВЛЕНА) ---
+        // --- ЛОГІКА СВАЙПУ ВНИЗ ---
         const sheet = document.getElementById('detailView');
         let startY = 0;
         let currentTranslate = 0;
@@ -733,12 +736,10 @@
             const dy = y - startY;
 
             if (dy > 0) {
-                // Тягнемо вниз - рухаємо модалку
                 currentTranslate = dy;
                 sheet.style.transform = `translateY(${dy}px)`;
                 if (e.cancelable) e.preventDefault(); 
             } else {
-                // Якщо користувач скролить вгору - віддаємо керування браузеру
                 currentTranslate = 0;
                 sheet.style.transform = `translateY(0px)`;
                 isDragging = false; 
