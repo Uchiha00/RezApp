@@ -29,21 +29,21 @@
             --text-sec: rgba(255, 255, 255, 0.6);
         }
 
-        /* Жорстко фіксуємо сторінку по координатах, щоб вбити смугу Home Indicator */
+        /* Змушуємо сторінку ігнорувати панелі браузера і йти до фізичних країв */
         html, body { 
             position: fixed; 
-            top: 0; left: 0; right: 0; bottom: 0;
-            width: 100%; height: 100%;
+            top: 0; left: 0; 
+            width: 100vw; height: 100dvh; 
             margin: 0; padding: 0; 
             background-color: var(--bg-absolute); 
             color: var(--text-main); 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             -webkit-tap-highlight-color: transparent;
             overflow: hidden; 
-            overscroll-behavior-y: none; /* Вимикає гумовий відскок всієї сторінки */
+            overscroll-behavior-y: none;
         }
 
-        /* МАГІЯ CANVAS: Робимо його на 120%, щоб він вилізав за краї екрана */
+        /* Наш рятівний гігантський canvas */
         #bg-canvas, .bg-overlay {
             position: absolute; 
             top: -10vh; left: -10vw;
@@ -59,9 +59,11 @@
 
         svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-        /* ОБЛАСТЬ СКРОЛУ */
+        /* Контейнер тепер теж на всю фізичну висоту екрана */
         .app-container {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            position: absolute; 
+            top: 0; left: 0; 
+            width: 100vw; height: 100dvh;
             overflow-y: auto; overflow-x: hidden; z-index: 1;
             -webkit-overflow-scrolling: touch;
             padding-top: env(safe-area-inset-top); 
@@ -157,10 +159,11 @@
         }
         .card-tag svg { width: 12px; height: 12px; stroke-width: 2.5;}
 
-        /* Оновлено модалки: 100% замість 100dvh */
+        /* Модалка на всю висоту */
         .ios-sheet {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            width: 100%; height: 100%;
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100vw; height: 100dvh;
             background: rgba(8,8,26,0.95); backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
             z-index: 1000; overflow-y: auto; overflow-x: hidden;
             transform: translateY(100%); 
