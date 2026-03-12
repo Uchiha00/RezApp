@@ -28,22 +28,31 @@
             --text-sec: rgba(255, 255, 255, 0.6);
         }
 
-        /* Жорстка фіксація екрану (захист від білих смуг iOS) */
-        html, body { 
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            width: 100%; height: 100%;
+        /* ФІКС БІЛОЇ/ЧОРНОЇ СМУГИ ЗНИЗУ! 
+           Колір задаємо для HTML, щоб він пробив рамки iOS. 
+        */
+        html {
+            background-color: #09091f;
+            width: 100vw;
+            height: 100dvh;
+        }
+
+        /* Прибрали position: fixed, тепер body займає весь екран натурально */
+        body { 
             margin: 0; padding: 0; 
-            background-color: #09091f !important; 
+            width: 100vw; height: 100dvh;
+            background-color: transparent; 
             color: var(--text-main); 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             -webkit-tap-highlight-color: transparent;
             overflow: hidden; 
         }
 
-        /* ФОНОВІ ПЛЯМИ (Canvas) */
+        /* ФОНОВІ ПЛЯМИ (Canvas розтягнутий з запасом) */
         #bg-canvas, .bg-overlay {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            width: 100%; height: 100%;
+            position: fixed; 
+            top: -20px; left: -20px; right: -20px; bottom: -20px; /* Вилазить за краї щоб не було дір */
+            width: auto; height: auto;
             z-index: -2; pointer-events: none; display: block;
         }
 
@@ -57,15 +66,15 @@
 
         /* ОСНОВНА ОБЛАСТЬ СКРОЛУ */
         .app-container {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            width: 100%; height: 100%;
             overflow-y: auto; overflow-x: hidden; z-index: 1;
             -webkit-overflow-scrolling: touch;
             padding-top: env(safe-area-inset-top); 
-            /* Ідеальний відступ знизу, щоб кнопка не заважала, але без діри */
             padding-bottom: calc(95px + env(safe-area-inset-bottom));
+            box-sizing: border-box;
         }
 
-        /* ХЕДЕР (Тепер скролиться разом зі сторінкою) */
+        /* ХЕДЕР */
         header { 
             padding: 20px 20px 10px 20px;
             display: flex; justify-content: space-between; align-items: center; 
@@ -73,7 +82,7 @@
         .logo { font-size: 32px; font-weight: 800; letter-spacing: -1px; display: flex; align-items: center; gap: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
         .logo svg { width: 28px; height: 28px; stroke-width: 2.5; }
 
-        /* ІДЕАЛЬНО ЧИСТИЙ ПОШУК (Фікс сірої коробки Safari) */
+        /* ПОШУК */
         .search-wrap { padding: 10px 20px 5px 20px; }
         .search-box {
             display: flex; align-items: center; gap: 12px;
@@ -700,7 +709,7 @@
             renderGrid();
         }
 
-        // --- ЛОГІКА СВАЙПУ ВНИЗ ДЛЯ ЗАКРИТТЯ (Pull to dismiss) ---
+        // --- ЛОГІКА СВАЙПУ ВНИЗ ДЛЯ ЗАКРИТТЯ ---
         const sheet = document.getElementById('detailView');
         let startY = 0;
         let isDragging = false;
