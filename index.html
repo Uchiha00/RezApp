@@ -59,7 +59,7 @@
 
         svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-        /* Контейнер тепер теж на всю фізичну висоту екрана */
+        /* Контейнер тепер на всю фізичну висоту без нижнього відступу */
         .app-container {
             position: absolute; 
             top: 0; left: 0; 
@@ -67,7 +67,7 @@
             overflow-y: auto; overflow-x: hidden; z-index: 1;
             -webkit-overflow-scrolling: touch;
             padding-top: env(safe-area-inset-top); 
-            padding-bottom: calc(130px + env(safe-area-inset-bottom));
+            padding-bottom: 0; /* Виправлено: повний екран, без зайвого відступу */
         }
 
         header { 
