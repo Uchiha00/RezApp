@@ -27,35 +27,26 @@
             --border-light: rgba(255, 255, 255, 0.2);
             --text-main: #ffffff;
             --text-sec: rgba(255, 255, 255, 0.6);
-            
-            /* Жорстке перекриття кольором для iOS */
-            background-color: var(--bg-absolute);
         }
 
-        /* ФІКС НИЖНЬОЇ СМУГИ: -webkit-fill-available гарантує заповнення під Home Indicator */
-        html {
-            background-color: var(--bg-absolute) !important;
-            height: -webkit-fill-available;
-        }
-
-        body { 
+        /* Використовуємо DVH для ідеального розміру на мобільних */
+        html, body { 
             position: fixed; 
-            top: 0; left: 0; width: 100vw; 
-            min-height: 100vh;
-            min-height: -webkit-fill-available;
+            top: 0; left: 0; 
+            width: 100vw; height: 100dvh;
             margin: 0; padding: 0; 
-            background-color: var(--bg-absolute) !important; 
+            background-color: var(--bg-absolute); 
             color: var(--text-main); 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             -webkit-tap-highlight-color: transparent;
             overflow: hidden; 
         }
 
-        /* МАГІЯ CANVAS: Вилазить за межі екрану на 50px, щоб не було дірок знизу */
+        /* Canvas фон чітко по краях */
         #bg-canvas, .bg-overlay {
-            position: absolute; 
-            top: -50px; bottom: -50px; left: -50px; right: -50px;
-            width: calc(100vw + 100px); height: calc(100vh + 100px);
+            position: fixed; 
+            top: 0; left: 0;
+            width: 100vw; height: 100dvh;
             z-index: -2; pointer-events: none; display: block;
         }
 
@@ -76,7 +67,6 @@
             padding-bottom: calc(110px + env(safe-area-inset-bottom));
         }
 
-        /* ХЕДЕР (Їде вгору при скролі) */
         header { 
             padding: 20px 20px 10px 20px;
             display: flex; justify-content: space-between; align-items: center; 
@@ -84,7 +74,6 @@
         .logo { font-size: 32px; font-weight: 800; letter-spacing: -1px; display: flex; align-items: center; gap: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
         .logo svg { width: 28px; height: 28px; stroke-width: 2.5; }
 
-        /* ЧИСТИЙ ПОШУК */
         .search-wrap { padding: 10px 20px 5px 20px; }
         .search-box {
             display: flex; align-items: center; gap: 12px;
@@ -120,7 +109,6 @@
         .search-clear:active { transform: translateY(-50%) scale(0.9); background: rgba(255, 255, 255, 0.25); }
         .search-clear svg { width: 14px; height: 14px; stroke-width: 3; margin: 0; }
 
-        /* Категорії */
         .categories-wrap { padding: 15px 0 20px 0; } 
         .categories { 
             display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; 
@@ -138,7 +126,6 @@
         }
         .cat-btn.active { background: #fff; color: #000; box-shadow: 0 4px 20px rgba(255,255,255,0.3); border-color: #fff; }
 
-        /* Картки */
         .grid { display: flex; flex-direction: column; gap: 18px; padding: 0 20px; }
         .card {
             display: flex; align-items: center; gap: 16px;
@@ -146,8 +133,8 @@
             backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--border); border-top: 1px solid var(--border-light); border-left: 1px solid var(--border-light); 
             border-radius: 28px; padding: 14px;
-            cursor: pointer; transition: 0.3s;
-            opacity: 0; animation: slideInUp 0.6s forwards;
+            cursor: pointer; transition: transform 0.2s, opacity 0.6s, background 0.2s;
+            opacity: 0; animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
         .card:active { transform: scale(0.96); background: var(--glass-strong); }
@@ -169,12 +156,11 @@
         }
         .card-tag svg { width: 12px; height: 12px; stroke-width: 2.5;}
 
-        /* Модалки (Зі свайпом) */
         .ios-sheet {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
             background: rgba(8,8,26,0.95); backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
             z-index: 1000; overflow-y: auto; overflow-x: hidden;
-            transform: translateY(100%); transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+            transform: translateY(100dvh); transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
             will-change: transform;
         }
         .ios-sheet.show { transform: translateY(0); }
@@ -190,10 +176,9 @@
             z-index: 100;
         }
 
-        /* Фото рецепту */
         .detail-img-box { 
             position: relative; 
-            height: 55vh; width: 100%; 
+            height: 55dvh; width: 100%; 
             border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; 
             overflow: hidden; z-index: 1;
             box-shadow: 0 10px 40px rgba(0,0,0,0.5);
@@ -262,7 +247,6 @@
         .action-btn.red { color: #ff453a; background: rgba(255, 69, 58, 0.1); border-color: rgba(255, 69, 58, 0.2);}
         .action-btn.red:active { background: rgba(255, 69, 58, 0.2); }
 
-        /* Форма */
         .form-header { 
             padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px;
             display: flex; justify-content: space-between; align-items: center; 
@@ -395,7 +379,7 @@
     <div id="formModal" class="ios-sheet">
         <div class="form-header">
             <h2 id="formTitle">Створити</h2>
-            <button class="circle-btn" style="width: 44px; height: 44px; position: static; background:rgba(255,255,255,0.1); border-radius:50%; border:none; color:white; display:flex; align-items:center; justify-content:center;" onclick="closeForm()">
+            <button style="width: 44px; height: 44px; position: static; background:rgba(255,255,255,0.1); border-radius:50%; border:none; color:white; display:flex; align-items:center; justify-content:center; cursor: pointer;" onclick="closeForm()">
                 <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
@@ -525,7 +509,7 @@
                         if(exists) {
                             document.getElementById('detTitle').innerText = exists.title;
                             document.getElementById('detImg').src = exists.photo || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?q=80&w=800';
-                            document.getElementById('detSteps').innerText = exists.steps;
+                            document.getElementById('detSteps').innerText = exists.steps || "Немає опису.";
                             
                             const portDiv = document.getElementById('detPortion');
                             if(exists.portion) {
@@ -581,7 +565,7 @@
                         <div class="card-title">${r.title}</div>
                         <div class="tags-row"><span class="card-tag">${r.category}</span>${portionHTML}</div>
                     </div>
-                </div>`
+                </div>`;
             }).join('');
         }
 
@@ -606,7 +590,8 @@
             renderIngredients(r.ingredients, id);
             
             const sheet = document.getElementById('detailView');
-            sheet.style.transform = ''; 
+            sheet.style.transition = 'transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)';
+            sheet.style.transform = ''; // Очищаємо інлайн-стилі, щоб спрацював CSS клас
             setTimeout(() => { sheet.classList.add('show'); }, 10);
         }
 
@@ -644,8 +629,15 @@
 
         function closeDetail() { 
             const sheet = document.getElementById('detailView');
-            sheet.classList.remove('show');
-            setTimeout(() => { currentDetailId = null; sheet.style.transform = ''; }, 400);
+            // Плавно дозакриваємо модалку, якщо вона була частково стягнута
+            sheet.style.transition = 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)';
+            sheet.style.transform = 'translateY(100dvh)';
+            
+            setTimeout(() => { 
+                sheet.classList.remove('show'); 
+                sheet.style.transform = ''; // Зкидаємо для наступного відкриття
+                currentDetailId = null; 
+            }, 400);
         }
 
         function openForm(isEdit = false) {
@@ -655,10 +647,21 @@
                 ['recipeTitle', 'recipePhoto', 'recipeIng', 'recipeSteps'].forEach(id => document.getElementById(id).value = '');
                 document.getElementById('recipePortion').value = '2 порції';
             }
-            setTimeout(() => { document.getElementById('formModal').classList.add('show'); }, 10);
+            const modal = document.getElementById('formModal');
+            modal.style.transition = 'transform 0.45s cubic-bezier(0.32, 0.72, 0, 1)';
+            modal.style.transform = '';
+            setTimeout(() => { modal.classList.add('show'); }, 10);
         }
         
-        function closeForm() { document.getElementById('formModal').classList.remove('show'); }
+        function closeForm() { 
+            const modal = document.getElementById('formModal');
+            modal.style.transition = 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)';
+            modal.style.transform = 'translateY(100dvh)';
+            setTimeout(() => { 
+                modal.classList.remove('show'); 
+                modal.style.transform = ''; 
+            }, 400);
+        }
 
         function triggerEdit() {
             const r = allRecipes.find(x => x.id === currentDetailId);
@@ -709,42 +712,50 @@
             renderGrid();
         }
 
-        // --- ЛОГІКА СВАЙПУ ВНИЗ ---
+        // --- ЛОГІКА СВАЙПУ ВНИЗ (ОНОВЛЕНА) ---
         const sheet = document.getElementById('detailView');
         let startY = 0;
+        let currentTranslate = 0;
         let isDragging = false;
 
         sheet.addEventListener('touchstart', (e) => {
             if (sheet.scrollTop <= 0) {
                 startY = e.touches[0].clientY;
                 isDragging = true;
+                currentTranslate = 0;
                 sheet.style.transition = 'none'; 
             }
         }, {passive: true});
 
         sheet.addEventListener('touchmove', (e) => {
             if (!isDragging) return;
-            const dy = e.touches[0].clientY - startY;
+            const y = e.touches[0].clientY;
+            const dy = y - startY;
 
             if (dy > 0) {
+                // Тягнемо вниз - рухаємо модалку
+                currentTranslate = dy;
                 sheet.style.transform = `translateY(${dy}px)`;
                 if (e.cancelable) e.preventDefault(); 
             } else {
+                // Якщо користувач скролить вгору - віддаємо керування браузеру
+                currentTranslate = 0;
                 sheet.style.transform = `translateY(0px)`;
+                isDragging = false; 
             }
         }, {passive: false});
 
         sheet.addEventListener('touchend', (e) => {
-            if (!isDragging) return;
+            if (!isDragging && currentTranslate === 0) return;
             isDragging = false;
-            const dy = e.changedTouches[0].clientY - startY;
-
-            sheet.style.transition = 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)';
-            if (dy > 120) { 
+            
+            if (currentTranslate > 120) { 
                 closeDetail();
             } else { 
+                sheet.style.transition = 'transform 0.4s cubic-bezier(0.32, 0.72, 0, 1)';
                 sheet.style.transform = 'translateY(0)';
             }
+            currentTranslate = 0;
         });
     </script>
 </body>
