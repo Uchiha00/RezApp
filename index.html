@@ -7,9 +7,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#09091f">
+    <meta name="theme-color" content="#08081a">
 
-    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiUmV6QXBwIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzA5MDkxZiIsInRoZW1lX2NvbG9yIjoiIzA5MDkxZiJ9">
+    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiUmV6QXBwIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzA4MDgxYSIsInRoZW1lX2NvbG9yIjoiIzA4MDgxYSJ9">
     
     <title>RezApp</title>
     
@@ -20,61 +20,63 @@
     
     <style>
         :root {
+            --bg-absolute: #08081a; 
             --glass-card: rgba(255, 255, 255, 0.04); 
-            --glass-strong: rgba(255, 255, 255, 0.08);
+            --glass-strong: rgba(255, 255, 255, 0.09);
             --border: rgba(255, 255, 255, 0.08); 
             --border-light: rgba(255, 255, 255, 0.2);
             --text-main: #ffffff;
             --text-sec: rgba(255, 255, 255, 0.6);
+            
+            /* Жорстке перекриття кольором для iOS */
+            background-color: var(--bg-absolute);
         }
 
-        /* ФІКС БІЛОЇ/ЧОРНОЇ СМУГИ ЗНИЗУ! 
-           Колір задаємо для HTML, щоб він пробив рамки iOS. 
-        */
+        /* ФІКС НИЖНЬОЇ СМУГИ: -webkit-fill-available гарантує заповнення під Home Indicator */
         html {
-            background-color: #09091f;
-            width: 100vw;
-            height: 100dvh;
+            background-color: var(--bg-absolute) !important;
+            height: -webkit-fill-available;
         }
 
-        /* Прибрали position: fixed, тепер body займає весь екран натурально */
         body { 
+            position: fixed; 
+            top: 0; left: 0; width: 100vw; 
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
             margin: 0; padding: 0; 
-            width: 100vw; height: 100dvh;
-            background-color: transparent; 
+            background-color: var(--bg-absolute) !important; 
             color: var(--text-main); 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             -webkit-tap-highlight-color: transparent;
             overflow: hidden; 
         }
 
-        /* ФОНОВІ ПЛЯМИ (Canvas розтягнутий з запасом) */
+        /* МАГІЯ CANVAS: Вилазить за межі екрану на 50px, щоб не було дірок знизу */
         #bg-canvas, .bg-overlay {
-            position: fixed; 
-            top: -20px; left: -20px; right: -20px; bottom: -20px; /* Вилазить за краї щоб не було дір */
-            width: auto; height: auto;
+            position: absolute; 
+            top: -50px; bottom: -50px; left: -50px; right: -50px;
+            width: calc(100vw + 100px); height: calc(100vh + 100px);
             z-index: -2; pointer-events: none; display: block;
         }
 
         .bg-overlay {
-            background: rgba(9, 9, 31, 0.4); 
+            background: rgba(8, 8, 26, 0.4); 
             backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
             z-index: -1;
         }
 
         svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-        /* ОСНОВНА ОБЛАСТЬ СКРОЛУ */
+        /* ОБЛАСТЬ СКРОЛУ */
         .app-container {
-            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
             overflow-y: auto; overflow-x: hidden; z-index: 1;
             -webkit-overflow-scrolling: touch;
             padding-top: env(safe-area-inset-top); 
-            padding-bottom: calc(95px + env(safe-area-inset-bottom));
-            box-sizing: border-box;
+            padding-bottom: calc(110px + env(safe-area-inset-bottom));
         }
 
-        /* ХЕДЕР */
+        /* ХЕДЕР (Їде вгору при скролі) */
         header { 
             padding: 20px 20px 10px 20px;
             display: flex; justify-content: space-between; align-items: center; 
@@ -82,7 +84,7 @@
         .logo { font-size: 32px; font-weight: 800; letter-spacing: -1px; display: flex; align-items: center; gap: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
         .logo svg { width: 28px; height: 28px; stroke-width: 2.5; }
 
-        /* ПОШУК */
+        /* ЧИСТИЙ ПОШУК */
         .search-wrap { padding: 10px 20px 5px 20px; }
         .search-box {
             display: flex; align-items: center; gap: 12px;
@@ -101,8 +103,8 @@
         
         .search-box input {
             background: transparent !important; 
+            -webkit-appearance: none !important; appearance: none !important;
             border: none !important; outline: none !important; box-shadow: none !important;
-            -webkit-appearance: none !important; appearance: none !important; border-radius: 0 !important;
             color: var(--text-main); font-size: 16px; width: 100%;
             padding: 0; margin: 0; font-weight: 500; font-family: inherit;
         }
@@ -137,7 +139,7 @@
         .cat-btn.active { background: #fff; color: #000; box-shadow: 0 4px 20px rgba(255,255,255,0.3); border-color: #fff; }
 
         /* Картки */
-        .grid { display: flex; flex-direction: column; gap: 16px; padding: 0 20px; }
+        .grid { display: flex; flex-direction: column; gap: 18px; padding: 0 20px; }
         .card {
             display: flex; align-items: center; gap: 16px;
             background: var(--glass-card); 
@@ -151,7 +153,7 @@
         .card:active { transform: scale(0.96); background: var(--glass-strong); }
         @keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card-img-wrap { width: 115px; height: 115px; border-radius: 20px; overflow: hidden; flex-shrink: 0; background: rgba(0,0,0,0.3); }
+        .card-img-wrap { width: 115px; height: 115px; border-radius: 20px; overflow: hidden; flex-shrink: 0; background: rgba(0,0,0,0.2); }
         .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
         .card:hover .card-img-wrap img { transform: scale(1.08); }
         
@@ -169,15 +171,14 @@
 
         /* Модалки (Зі свайпом) */
         .ios-sheet {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(9,9,31,0.95); backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background: rgba(8,8,26,0.95); backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
             z-index: 1000; overflow-y: auto; overflow-x: hidden;
             transform: translateY(100%); transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
             will-change: transform;
         }
         .ios-sheet.show { transform: translateY(0); }
 
-        /* Смужка індикатор свайпу */
         .drag-handle {
             width: 45px; height: 6px;
             background: rgba(255, 255, 255, 0.4);
@@ -200,7 +201,7 @@
         .detail-img-box img { width: 100%; height: 100%; object-fit: cover; }
         .detail-img-box::after { 
             content:''; position: absolute; top:0; left:0; width:100%; height:100%; 
-            background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 40%, rgba(9,9,31,0.95) 95%, rgba(9,9,31,1) 100%); 
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 40%, rgba(8,8,26,0.95) 95%, rgba(8,8,26,1) 100%); 
         }
         
         .detail-content { 
@@ -247,7 +248,6 @@
             border: 1px solid var(--border); border-top: 1px solid var(--border-light);
         }
 
-        /* Редагування сховане в самому низу */
         .bottom-actions {
             margin-top: 50px; padding-top: 30px; border-top: 1px solid var(--border);
             display: flex; flex-direction: column; gap: 12px;
@@ -266,7 +266,7 @@
         .form-header { 
             padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px;
             display: flex; justify-content: space-between; align-items: center; 
-            background: rgba(9,9,31,0.95); backdrop-filter: blur(30px); position: sticky; top: 0; z-index: 10;
+            background: rgba(8,8,26,0.95); backdrop-filter: blur(30px); position: sticky; top: 0; z-index: 10;
         }
         .form-header h2 { font-size: 30px; font-weight: 800;}
         .form-scroll-area { padding: 30px 20px calc(120px + env(safe-area-inset-bottom)) 20px; }
@@ -467,7 +467,7 @@
 
         function renderCanvas(ts) {
             ctx.globalCompositeOperation = 'source-over';
-            ctx.fillStyle = '#09091f'; 
+            ctx.fillStyle = '#08081a'; 
             ctx.fillRect(0, 0, W, H);
             ctx.globalCompositeOperation = 'screen';
 
@@ -709,7 +709,7 @@
             renderGrid();
         }
 
-        // --- ЛОГІКА СВАЙПУ ВНИЗ ДЛЯ ЗАКРИТТЯ ---
+        // --- ЛОГІКА СВАЙПУ ВНИЗ ---
         const sheet = document.getElementById('detailView');
         let startY = 0;
         let isDragging = false;
