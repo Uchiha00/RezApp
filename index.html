@@ -29,7 +29,6 @@
             --text-sec: rgba(255, 255, 255, 0.6);
         }
 
-        /* Змушуємо сторінку ігнорувати панелі браузера і йти до фізичних країв */
         html, body { 
             position: fixed; 
             top: 0; left: 0; 
@@ -43,7 +42,6 @@
             overscroll-behavior-y: none;
         }
 
-        /* Наш рятівний гігантський canvas */
         #bg-canvas, .bg-overlay {
             position: absolute; 
             top: -10vh; left: -10vw;
@@ -59,17 +57,23 @@
 
         svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
-        /* Контейнер тепер на всю фізичну висоту без нижнього відступу */
         .app-container {
             position: absolute; 
-            top: 0; left: 0; 
-            width: 100vw; height: 100dvh;
-            overflow-y: auto; overflow-x: hidden; z-index: 1;
-            -webkit-overflow-scrolling: touch;
-            padding-top: env(safe-area-inset-top); 
-            padding-bottom: 0; /* Виправлено: повний екран, без зайвого відступу */
+            inset: 0;
+            width: 100vw;
+            height: 100dvh;
+            overflow: hidden;
+            z-index: 1;
         }
 
+        .scrollable-content {
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            padding: env(safe-area-inset-top) 0 calc(100px + env(safe-area-inset-bottom)) 0;
+            box-sizing: border-box;
+        }
 
         header { 
             padding: 20px 20px 10px 20px;
@@ -119,7 +123,7 @@
             padding: 0 20px; 
         }
         .categories::-webkit-scrollbar { display: none; }
-        .categories::after { content: ''; padding-right: 1px; } 
+        .categories::after { content: ''; padding-right: 20px; } 
         
         .cat-btn { 
             background: var(--glass-card); 
@@ -130,7 +134,7 @@
         }
         .cat-btn.active { background: #fff; color: #000; box-shadow: 0 4px 20px rgba(255,255,255,0.3); border-color: #fff; }
 
-        .grid { display: flex; flex-direction: column; gap: 18px; padding: 0 20px; }
+        .grid { display: flex; flex-direction: column; gap: 18px; padding: 0 20px 40px; }
         .card {
             display: flex; align-items: center; gap: 16px;
             background: var(--glass-card); 
@@ -160,10 +164,9 @@
         }
         .card-tag svg { width: 12px; height: 12px; stroke-width: 2.5;}
 
-        /* Модалка на всю висоту */
         .ios-sheet {
             position: fixed; 
-            top: 0; left: 0; 
+            inset: 0;
             width: 100vw; height: 100dvh;
             background: rgba(8,8,26,0.95); backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
             z-index: 1000; overflow-y: auto; overflow-x: hidden;
@@ -193,7 +196,7 @@
         }
         .detail-img-box img { width: 100%; height: 100%; object-fit: cover; }
         .detail-img-box::after { 
-            content:''; position: absolute; top:0; left:0; width:100%; height:100%; 
+            content:''; position: absolute; inset: 0; 
             background: linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 40%, rgba(8,8,26,0.95) 95%, rgba(8,8,26,1) 100%); 
         }
         
@@ -284,7 +287,8 @@
         .btn-main:active { transform: scale(0.96); }
         
         .fab {
-            position: fixed; bottom: calc(25px + env(safe-area-inset-bottom)); 
+            position: fixed; 
+            bottom: calc(20px + env(safe-area-inset-bottom)); 
             left: 50%; transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.12); 
             backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
@@ -304,38 +308,44 @@
     <div class="bg-overlay"></div>
 
     <div class="app-container">
-        <header>
-            <div class="logo">
-                <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
-                RezApp
-            </div>
-        </header>
+        <div class="scrollable-content">
 
-        <div class="search-wrap">
-            <div class="search-box">
-                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                <input type="text" id="searchInput" placeholder="Знайти страву..." oninput="onSearchInput()">
-                <button id="searchClear" class="search-clear" onclick="clearSearch()">
-                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
+            <header>
+                <div class="logo">
+                    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+                    RezApp
+                </div>
+            </header>
+
+            <div class="search-wrap">
+                <div class="search-box">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" id="searchInput" placeholder="Знайти страву..." oninput="onSearchInput()">
+                    <button id="searchClear" class="search-clear" onclick="clearSearch()">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
             </div>
+
+            <div class="categories-wrap">
+                <div class="categories">
+                    <button class="cat-btn active" onclick="filter('All')">Всі рецепти</button>
+                    <button class="cat-btn" onclick="filter('Загальне')">Загальне</button>
+                    <button class="cat-btn" onclick="filter('Сніданок')">Сніданок</button>
+                    <button class="cat-btn" onclick="filter('Протеїн')">Протеїн</button>
+                </div>
+            </div>
+
+            <div class="grid" id="grid"></div>
+
         </div>
-
-        <div class="categories-wrap">
-            <div class="categories">
-                <button class="cat-btn active" onclick="filter('All')">Всі рецепти</button>
-                <button class="cat-btn" onclick="filter('Загальне')">Загальне</button>
-                <button class="cat-btn" onclick="filter('Сніданок')">Сніданок</button>
-                <button class="cat-btn" onclick="filter('Протеїн')">Протеїн</button>
-            </div>
-        </div>
-
-        <div class="grid" id="grid"></div>
     </div>
 
     <button class="fab" onclick="openForm()">
         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
     </button>
+
+    <!-- решта коду (detailView, formModal та скрипт) залишається без змін -->
 
     <div id="detailView" class="ios-sheet">
         <div class="drag-handle"></div>
@@ -387,7 +397,7 @@
     <div id="formModal" class="ios-sheet">
         <div class="form-header">
             <h2 id="formTitle">Створити</h2>
-            <button style="width: 44px; height: 44px; position: static; background:rgba(255,255,255,0.1); border-radius:50%; border:none; color:white; display:flex; align-items:center; justify-content:center; cursor: pointer;" onclick="closeForm()">
+            <button style="width: 44px; height: 44px; background:rgba(255,255,255,0.1); border-radius:50%; border:none; color:white; display:flex; align-items:center; justify-content:center; cursor: pointer;" onclick="closeForm()">
                 <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
         </div>
@@ -438,6 +448,11 @@
     </div>
 
     <script>
+        // ────────────────────────────────────────────────
+        // Ваш JavaScript-код залишається без змін
+        // (він вже добре написаний, проблема була тільки в CSS-структурі)
+        // ────────────────────────────────────────────────
+
         const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d', { alpha: false });
         let W, H;
@@ -719,7 +734,7 @@
             renderGrid();
         }
 
-        // --- ЛОГІКА СВАЙПУ ВНИЗ ---
+        // Свайп вниз для закриття детального перегляду
         const sheet = document.getElementById('detailView');
         let startY = 0;
         let currentTranslate = 0;
