@@ -2,15 +2,14 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#05050a">
 
-    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiUmV6QXBwIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzAwMDAwMCIsInRoZW1lX2NvbG9yIjoiIzAwMDAwMCJ9">
+    <link rel="manifest" href="data:application/manifest+json;base64,eyJuYW1lIjoiUmV6QXBwIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiIzA1MDUwYSIsInRoZW1lX2NvbG9yIjoiIzA1MDUwYSJ9">
     
     <title>RezApp</title>
     
@@ -21,128 +20,189 @@
     
     <style>
         :root {
-            --bg-absolute: #000000;
-            --glass-card: rgba(20, 20, 24, 0.55);
-            --glass-strong: rgba(25, 25, 30, 0.75);
-            --border: rgba(255, 255, 255, 0.08);
-            --border-glow: rgba(255, 255, 255, 0.15);
+            --glass-card: rgba(255, 255, 255, 0.05); 
+            --glass-strong: rgba(255, 255, 255, 0.1);
+            --border: rgba(255, 255, 255, 0.1); 
+            --border-light: rgba(255, 255, 255, 0.25);
+            
             --text-main: #ffffff;
-            --text-sec: #9ca3af;
+            --text-sec: rgba(255, 255, 255, 0.6);
             --success: #ffffff;
         }
 
         html, body { 
             height: 100dvh; width: 100vw;
             margin: 0; padding: 0; 
-            background-color: var(--bg-absolute);
+            background-color: transparent; 
             color: var(--text-main); 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
-            overflow-x: hidden;
+            overflow: hidden; 
         }
 
-        .ambient-bg {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; z-index: -1; pointer-events: none;
-            background: 
-                radial-gradient(circle at 10% 30%, rgba(50, 40, 100, 0.3), transparent 50%),
-                radial-gradient(circle at 90% 70%, rgba(30, 60, 100, 0.25), transparent 60%);
+        /* 1. Шар фону: Canvas анімація */
+        #bg-canvas {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            z-index: -2; pointer-events: none; background: #09091f;
+        }
+
+        /* 2. Шар затемнення (щоб текст читався поверх плям) */
+        .bg-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background: rgba(9, 9, 31, 0.3); 
+            backdrop-filter: blur(40px); 
+            -webkit-backdrop-filter: blur(40px);
+            z-index: -1; pointer-events: none;
         }
 
         svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 1.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 
         .app-container {
+            position: relative; z-index: 1;
             height: 100dvh; overflow-y: auto; overflow-x: hidden;
-            padding-bottom: calc(140px + env(safe-area-inset-bottom));
+            padding-bottom: calc(160px + env(safe-area-inset-bottom));
         }
 
+        /* БЕЗШОВНИЙ ХЕДЕР (Без ліній і фону) */
         header { 
             position: sticky; top: 0; z-index: 50;
-            padding: calc(15px + env(safe-area-inset-top)) 20px 15px 20px;
-            background: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            padding: calc(15px + env(safe-area-inset-top)) 20px 10px 20px;
+            background: transparent; /* Жодного фону */
             display: flex; justify-content: space-between; align-items: center; 
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            /* Прибрали border-bottom */
         }
-        .logo { font-size: 30px; font-weight: 800; letter-spacing: -1px; display: flex; align-items: center; gap: 10px;}
+        .logo { font-size: 30px; font-weight: 800; letter-spacing: -1px; display: flex; align-items: center; gap: 10px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);}
         .logo svg { width: 28px; height: 28px; stroke-width: 2.5; }
 
-        .categories-wrap { padding: 25px 0 20px 20px; }
-        .categories { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding-right: 20px; }
+        /* ІДЕАЛЬНО ЧИСТИЙ ПОШУК */
+        .search-wrap { padding: 5px 20px 5px 20px; }
+        .search-box {
+            display: flex; align-items: center; gap: 12px;
+            background: rgba(255, 255, 255, 0.05); /* Рівномірне прозоре скло */
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px; padding: 14px 18px;
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2); 
+            transition: 0.3s; position: relative;
+        }
+        .search-box:focus-within { 
+            background: rgba(255, 255, 255, 0.08); 
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3); 
+        }
+        .search-box svg { color: var(--text-sec); width: 22px; height: 22px; margin-left: 4px; flex-shrink: 0;}
+        .search-box input {
+            background: transparent !important; /* Жорстко прибираємо фон iOS */
+            border: none; outline: none; box-shadow: none;
+            color: var(--text-main); font-size: 16px; width: 100%;
+            padding: 0; font-weight: 500;
+            -webkit-appearance: none; appearance: none; /* Прибирає системні стилі браузера */
+        }
+        .search-box input::placeholder { color: var(--text-sec); }
+        
+        .search-clear {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.15); border: none; color: var(--text-main); 
+            padding: 6px; border-radius: 50%; 
+            cursor: pointer; opacity: 0; visibility: hidden; transition: 0.3s; z-index: 2;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .search-clear:active { transform: translateY(-50%) scale(0.9); }
+        .search-clear svg { width: 14px; height: 14px; stroke-width: 3; margin: 0; }
+
+        /* КАТЕГОРІЇ (Виправлений скрол) */
+        .categories-wrap { padding: 15px 0 20px 0; } /* Відступ зовні прибрано */
+        .categories { 
+            display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; 
+            padding: 0 20px; /* Відступи тепер всередині скрол-контейнера */
+        }
         .categories::-webkit-scrollbar { display: none; }
+        .categories::after { content: ''; padding-right: 1px; } /* Фікс для iOS */
+        
         .cat-btn { 
-            background: rgba(255,255,255,0.05); border: 1px solid var(--border);
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            background: var(--glass-card); 
+            border: 1px solid var(--border); border-top: 1px solid var(--border-light);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             padding: 12px 24px; border-radius: 100px; color: var(--text-sec); 
             font-size: 15px; font-weight: 600; transition: 0.3s; cursor: pointer; white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        .cat-btn.active { background: #fff; color: #000; box-shadow: 0 4px 15px rgba(255,255,255,0.2); border-color: #fff; }
+        .cat-btn.active { background: #fff; color: #000; box-shadow: 0 4px 20px rgba(255,255,255,0.3); border-color: #fff; }
 
+        /* Картки (Світле матове скло) */
         .grid { display: flex; flex-direction: column; gap: 20px; padding: 0 20px; }
         .card {
-            display: flex; align-items: center; gap: 18px;
+            display: flex; align-items: center; gap: 16px;
             background: var(--glass-card); 
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border); border-top: 1px solid rgba(255,255,255,0.15); 
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border); 
+            border-top: 1px solid var(--border-light);
+            border-left: 1px solid var(--border-light); 
             border-radius: 28px; padding: 14px;
             cursor: pointer; transition: 0.3s;
             opacity: 0; animation: slideInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
         .card:active { transform: scale(0.96); background: var(--glass-strong); }
         @keyframes slideInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card-img-wrap { width: 130px; height: 130px; border-radius: 22px; overflow: hidden; flex-shrink: 0; background: #111; }
+        .card-img-wrap { width: 125px; height: 125px; border-radius: 20px; overflow: hidden; flex-shrink: 0; background: rgba(0,0,0,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.3);}
         .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
         .card:hover .card-img-wrap img { transform: scale(1.08); }
         
         .card-info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-        .card-title { font-size: 20px; font-weight: 700; line-height: 1.25; margin-bottom: 12px; }
+        .card-title { font-size: 19px; font-weight: 700; line-height: 1.25; margin-bottom: 12px; letter-spacing: -0.3px; text-shadow: 0 2px 5px rgba(0,0,0,0.5);}
         
         .tags-row { display: flex; gap: 8px; flex-wrap: wrap; }
         .card-tag { 
-            font-size: 11px; font-weight: 700; text-transform: uppercase; 
-            background: rgba(255,255,255,0.12); padding: 6px 10px; border-radius: 8px; 
+            font-size: 10px; font-weight: 700; text-transform: uppercase; 
+            background: rgba(255,255,255,0.1); padding: 6px 10px; border-radius: 8px; 
             color: #fff; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15); backdrop-filter: blur(10px);
         }
         .card-tag svg { width: 12px; height: 12px; stroke-width: 2.5;}
 
+        /* Модалки */
         .ios-sheet {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
-            background: var(--bg-absolute); z-index: 1000; overflow-y: auto; overflow-x: hidden;
+            background: rgba(9,9,31,0.85); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            z-index: 1000; overflow-y: auto; overflow-x: hidden;
             transform: translateY(100%); transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
         }
         .ios-sheet.show { transform: translateY(0); }
 
-        /* Зображення б'ється прямо в край (top: 0) без відступів */
         .detail-img-box { 
             position: absolute; top: 0; left: 0;
-            height: 60vh; width: 100vw; 
+            height: 55vh; width: 100%; 
             border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; 
             overflow: hidden; z-index: 1;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
         .detail-img-box img { width: 100%; height: 100%; object-fit: cover; }
         .detail-img-box::after { 
             content:''; position: absolute; top:0; left:0; width:100%; height:100%; 
-            background: linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 35%, rgba(0,0,0,0.95) 90%, #000 100%); 
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 40%, rgba(9,9,31,0.9) 90%, rgba(9,9,31,1) 100%); 
         }
         
         .top-btns { 
             position: fixed; 
             top: calc(15px + env(safe-area-inset-top)); 
-            width: 100%; padding: 0 20px; display: flex; justify-content: space-between; z-index: 50; 
+            left: 20px; right: 20px; 
+            display: flex; justify-content: space-between; z-index: 50; 
         }
         .circle-btn { 
             background: rgba(255,255,255,0.15); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            color: white; border: 1px solid rgba(255,255,255,0.25); 
+            color: white; border: 1px solid rgba(255,255,255,0.3); border-top: 1px solid rgba(255,255,255,0.5);
             width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
         .circle-btn:active { transform: scale(0.9); }
 
         #actionMenu {
             display: none; position: fixed; top: calc(75px + env(safe-area-inset-top)); right: 20px; 
-            background: rgba(25,25,30,0.85); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border: 1px solid var(--border-glow); border-radius: 20px; padding: 10px; z-index: 60; 
+            background: rgba(255,255,255,0.1); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--border-light); border-top: 1px solid rgba(255,255,255,0.5); border-radius: 20px; padding: 10px; z-index: 60; 
             box-shadow: 0 20px 50px rgba(0,0,0,0.9); min-width: 200px;
         }
         .menu-btn { 
@@ -150,35 +210,36 @@
             background: none; border: none; padding: 16px; color: var(--text-main); 
             font-size: 16px; border-radius: 14px; cursor: pointer; font-weight: 600;
         }
-        .menu-btn.red { color: #ff3b30; }
-        .menu-btn.red svg { stroke: #ff3b30; }
+        .menu-btn.red { color: #ff453a; }
+        .menu-btn.red svg { stroke: #ff453a; }
         
         .detail-content { 
             padding: 0 24px calc(100px + env(safe-area-inset-bottom)) 24px; 
             position: relative; z-index: 2; 
-            margin-top: 50vh;
+            margin-top: 45vh;
         }
-        .detail-title { font-size: 38px; font-weight: 800; margin: 15px 0 30px 0; line-height: 1.1; letter-spacing: -1px; }
+        .detail-title { font-size: 38px; font-weight: 800; margin: 15px 0 30px 0; line-height: 1.1; letter-spacing: -1px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
 
         .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin: 45px 0 24px; }
         .section-title { font-size: 22px; color: var(--text-main); font-weight: 800; display: flex; align-items: center; gap: 12px;}
         .section-title svg { color: var(--text-sec); stroke-width: 2;}
         
         .text-btn { 
-            background: rgba(255,255,255,0.08); border: none; color: var(--text-main); 
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: var(--text-main); 
             font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; 
-            padding: 8px 16px; border-radius: 100px; transition: 0.2s;
+            padding: 8px 16px; border-radius: 100px; transition: 0.2s; backdrop-filter: blur(10px);
         }
-        .text-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.15); }
+        .text-btn:active { transform: scale(0.95); background: rgba(255,255,255,0.2); }
 
         .check-item { 
             display: flex; align-items: flex-start; gap: 16px; margin-bottom: 14px; cursor: pointer; 
             padding: 22px; background: var(--glass-card); border-radius: 24px; 
-            border: 1px solid var(--border); transition: 0.3s; 
-            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border); border-top: 1px solid var(--border-light); 
+            transition: 0.3s; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
         }
         .check-item:active { transform: scale(0.98); background: var(--glass-strong); }
-        .check-item.done { opacity: 0.4; border-color: transparent; }
+        .check-item.done { opacity: 0.4; border-color: transparent; box-shadow: none; background: rgba(0,0,0,0.2);}
         .check-item.done .check-text { text-decoration: line-through; color: var(--text-sec); }
         
         .custom-checkbox { 
@@ -186,61 +247,68 @@
             display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: 0.2s; 
         }
         .custom-checkbox svg { opacity: 0; width: 16px; height: 16px; stroke-width: 4; transform: scale(0.3); transition: 0.3s; }
-        .check-item.done .custom-checkbox { background: var(--text-main); border-color: var(--text-main); color: var(--bg-absolute); }
+        .check-item.done .custom-checkbox { background: var(--text-main); border-color: var(--text-main); color: #000; }
         .check-item.done .custom-checkbox svg { opacity: 1; transform: scale(1); }
         
         .check-text { font-size: 17px; line-height: 1.5; padding-top: 2px; font-weight: 600; }
 
         .plain-text-steps { 
             font-size: 18px; line-height: 1.8; white-space: pre-line; color: rgba(255,255,255,0.95); 
-            background: var(--glass-card); backdrop-filter: blur(15px); padding: 28px; border-radius: 30px; border: 1px solid var(--border);
+            background: var(--glass-card); backdrop-filter: blur(15px); padding: 28px; border-radius: 30px; 
+            border: 1px solid var(--border); border-top: 1px solid var(--border-light);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
+        /* Форма */
         .form-header { 
             padding: calc(20px + env(safe-area-inset-top)) 20px 20px 20px;
             display: flex; justify-content: space-between; align-items: center; 
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(20px); position: sticky; top: 0; z-index: 10;
-            border-bottom: 1px solid var(--border);
+            background: rgba(9,9,31,0.8); backdrop-filter: blur(30px); position: sticky; top: 0; z-index: 10;
         }
         .form-header h2 { font-size: 30px; font-weight: 800;}
         .form-scroll-area { padding: 30px 20px calc(120px + env(safe-area-inset-bottom)) 20px; }
         
         .input-group { margin-bottom: 26px; }
-        .input-label { font-size: 12px; color: var(--text-sec); margin-bottom: 12px; display: block; font-weight: 700; padding-left: 6px; text-transform: uppercase; letter-spacing: 1px;}
+        .input-label { font-size: 12px; color: var(--text-main); margin-bottom: 12px; display: block; font-weight: 700; padding-left: 6px; text-transform: uppercase; letter-spacing: 1px;}
         
         input, textarea, select { 
-            width: 100%; padding: 22px 24px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); 
+            width: 100%; padding: 22px 24px; background: var(--glass-card); 
+            border: 1px solid var(--border); border-top: 1px solid var(--border-light); 
             border-radius: 22px; color: var(--text-main); font-size: 17px; outline: none; transition: 0.3s;
-            -webkit-appearance: none; font-weight: 600; backdrop-filter: blur(10px);
+            -webkit-appearance: none; font-weight: 600; backdrop-filter: blur(15px); box-sizing: border-box;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
-        input:focus, textarea:focus, select:focus { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.1); }
+        input:focus, textarea:focus, select:focus { border-color: rgba(255,255,255,0.5); background: var(--glass-strong); }
         
         .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         
         .btn-main { 
-            background: var(--text-main); color: var(--bg-absolute); padding: 24px; border-radius: 24px; 
+            background: var(--text-main); color: #000; padding: 24px; border-radius: 24px; 
             width: 100%; font-weight: 800; border: none; font-size: 18px; cursor: pointer; margin-top: 20px; transition: 0.3s;
+            box-shadow: 0 10px 30px rgba(255,255,255,0.2);
         }
-        .btn-main:active { transform: scale(0.96); }
+        .btn-main:active { transform: scale(0.96); box-shadow: 0 5px 15px rgba(255,255,255,0.1); }
         
         .fab {
-            position: fixed; bottom: calc(30px + env(safe-area-inset-bottom)); right: 25px;
-            background: rgba(255, 255, 255, 0.15); 
-            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255,255,255,0.3);
+            position: fixed; bottom: calc(30px + env(safe-area-inset-bottom)); 
+            left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.1); 
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255,255,255,0.2); border-top: 1px solid rgba(255,255,255,0.6);
             color: var(--text-main); 
-            width: 65px; height: 65px; border-radius: 50%;
+            width: 70px; height: 70px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.8); z-index: 90; 
-            cursor: pointer; transition: 0.3s;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5); z-index: 90; cursor: pointer; transition: 0.3s;
         }
-        .fab svg { width: 32px; height: 32px; stroke-width: 2; }
-        .fab:active { transform: scale(0.9); background: rgba(255,255,255,0.25); }
+        .fab svg { width: 34px; height: 34px; stroke-width: 2; }
+        .fab:active { transform: translateX(-50%) scale(0.9); background: rgba(255, 255, 255, 0.2); }
     </style>
 </head>
 <body>
 
-    <div class="ambient-bg"></div>
+    <canvas id="bg-canvas"></canvas>
+    
+    <div class="bg-overlay"></div>
 
     <div class="app-container">
         <header>
@@ -249,6 +317,16 @@
                 RezApp
             </div>
         </header>
+
+        <div class="search-wrap">
+            <div class="search-box">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="searchInput" placeholder="Знайти страву..." oninput="onSearchInput()">
+                <button id="searchClear" class="search-clear" onclick="clearSearch()">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+        </div>
 
         <div class="categories-wrap">
             <div class="categories">
@@ -374,6 +452,58 @@
     </div>
 
     <script>
+        // --- МАГІЯ CANVAS ФОНУ (ЛАВАНДА + ПЕРСИК) ---
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        let W, H;
+
+        function resizeCanvas() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        const orbs = [
+            // Лавандові
+            { x: 0.15, y: 0.20, r: 0.70, color: [180, 136, 255], speed: 0.00016, phase: 0.0, moveX: 0.20, moveY: 0.15 },
+            { x: 0.55, y: 0.55, r: 0.55, color: [180, 136, 255], speed: 0.00009, phase: 3.3, moveX: 0.14, moveY: 0.18 },
+            // Персиково-рожеві
+            { x: 0.85, y: 0.80, r: 0.65, color: [255, 143, 171], speed: 0.00012, phase: 1.6, moveX: 0.18, moveY: 0.20 },
+            { x: 0.78, y: 0.18, r: 0.45, color: [255, 143, 171], speed: 0.00014, phase: 5.0, moveX: 0.15, moveY: 0.12 },
+        ];
+
+        function renderCanvas(ts) {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = '#09091f'; 
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.globalCompositeOperation = 'screen';
+
+            for (let i = 0; i < orbs.length; i++) {
+                let o = orbs[i];
+                let cx = (o.x + Math.sin(ts * o.speed + o.phase) * o.moveX) * W;
+                let cy = (o.y + Math.cos(ts * o.speed * 0.83 + o.phase) * o.moveY) * H;
+                let radius = o.r * Math.min(W, H);
+
+                let grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+                grad.addColorStop(0, `rgba(${o.color[0]}, ${o.color[1]}, ${o.color[2]}, 0.82)`);
+                grad.addColorStop(0.40, `rgba(${o.color[0]}, ${o.color[1]}, ${o.color[2]}, 0.48)`);
+                grad.addColorStop(0.75, `rgba(${o.color[0]}, ${o.color[1]}, ${o.color[2]}, 0.14)`);
+                grad.addColorStop(1, `rgba(${o.color[0]}, ${o.color[1]}, ${o.color[2]}, 0)`);
+
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                ctx.fillStyle = grad;
+                ctx.fill();
+            }
+
+            ctx.globalCompositeOperation = 'source-over';
+            requestAnimationFrame(renderCanvas);
+        }
+        requestAnimationFrame(renderCanvas);
+        // --- КІНЕЦЬ CANVAS ---
+
         const firebaseConfig = {
           apiKey: "AIzaSyDKokz-gKpWZJV__yiYz2MzbybqZX1n-Ws",
           authDomain: "rezapp-42b6f.firebaseapp.com",
@@ -389,6 +519,7 @@
         
         let allRecipes = [];
         let currentActiveCat = 'All';
+        let currentSearchQuery = '';
         let currentDetailId = null; 
         let currentEditId = null;
 
@@ -418,12 +549,44 @@
             );
         }
 
+        function onSearchInput() {
+            const input = document.getElementById('searchInput');
+            currentSearchQuery = input.value.toLowerCase();
+            toggleClearButton();
+            renderGrid();
+        }
+
+        function toggleClearButton() {
+            const clearBtn = document.getElementById('searchClear');
+            if (currentSearchQuery.length > 0) {
+                clearBtn.style.visibility = 'visible';
+                clearBtn.style.opacity = '1';
+            } else {
+                clearBtn.style.visibility = 'hidden';
+                clearBtn.style.opacity = '0';
+            }
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('searchInput');
+            input.value = '';
+            currentSearchQuery = '';
+            toggleClearButton();
+            input.focus();
+            renderGrid();
+        }
+
         function renderGrid() {
             const grid = document.getElementById('grid');
-            const filtered = currentActiveCat === 'All' ? allRecipes : allRecipes.filter(r => r.category === currentActiveCat);
+            
+            const filtered = allRecipes.filter(r => {
+                const matchCategory = currentActiveCat === 'All' || r.category === currentActiveCat;
+                const matchSearch = r.title.toLowerCase().includes(currentSearchQuery);
+                return matchCategory && matchSearch;
+            });
             
             if (filtered.length === 0) {
-                grid.innerHTML = '<div style="text-align:center; color:var(--text-sec); margin-top:80px; font-size:16px; font-weight: 600;">Немає рецептів</div>';
+                grid.innerHTML = '<div style="text-align:center; color:var(--text-sec); margin-top:60px; font-size:16px; font-weight: 500; background:var(--glass-card); padding:20px; border-radius:20px; border:1px solid var(--border); backdrop-filter:blur(20px);">Нічого не знайдено 🤷‍♂️</div>';
                 return;
             }
 
@@ -439,7 +602,7 @@
                 return `
                 <div class="card" style="animation-delay: ${animDelay}s" onclick="openDetail('${r.id}')">
                     <div class="card-img-wrap">
-                        <img src="${r.photo || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?q=80&w=600'}">
+                        <img src="${r.photo || 'https://via.placeholder.com/150'}">
                     </div>
                     <div class="card-info">
                         <div class="card-title">${r.title}</div>
@@ -456,7 +619,7 @@
             currentDetailId = id;
             const r = allRecipes.find(x => x.id === id);
             
-            document.getElementById('detImg').src = r.photo || 'https://images.unsplash.com/photo-1495521821757-a1efb6729352?q=80&w=800';
+            document.getElementById('detImg').src = r.photo || 'https://via.placeholder.com/800';
             document.getElementById('detTag').innerText = r.category;
             
             const portDiv = document.getElementById('detPortion');
